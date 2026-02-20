@@ -37,6 +37,9 @@ function generateId() {
   return Math.random().toString(36).slice(2) + Date.now().toString(36);
 }
 
+// In-memory fallback when Redis and file are unavailable (e.g. Vercel without Redis)
+let memoryStore: Store | null = null;
+
 async function load(): Promise<Store> {
   const redisUrl = process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL;
   const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN;
@@ -47,17 +50,22 @@ async function load(): Promise<Store> {
       const raw = await redis.get<string>(KV_KEY);
       if (raw) return { ...defaultStore, ...JSON.parse(raw) };
     } catch {
-      // fall through to file
+      // fall through
     }
   }
-  ensureDataDir();
-  if (!existsSync(DATA_FILE)) return { ...defaultStore };
   try {
-    const raw = readFileSync(DATA_FILE, "utf-8");
-    return { ...defaultStore, ...JSON.parse(raw) };
+    if (typeof existsSync !== "undefined") {
+      ensureDataDir();
+      if (existsSync(DATA_FILE)) {
+        const raw = readFileSync(DATA_FILE, "utf-8");
+        return { ...defaultStore, ...JSON.parse(raw) };
+      }
+    }
   } catch {
-    return { ...defaultStore };
+    // file not available (e.g. Vercel serverless)
   }
+  if (!memoryStore) memoryStore = { ...defaultStore };
+  return memoryStore;
 }
 
 async function save(store: Store): Promise<void> {
@@ -73,8 +81,16 @@ async function save(store: Store): Promise<void> {
       // fall through
     }
   }
-  ensureDataDir();
-  writeFileSync(DATA_FILE, JSON.stringify(store, null, 2), "utf-8");
+  try {
+    if (typeof existsSync !== "undefined") {
+      ensureDataDir();
+      writeFileSync(DATA_FILE, JSON.stringify(store, null, 2), "utf-8");
+      return;
+    }
+  } catch {
+    // file not writable (e.g. Vercel)
+  }
+  memoryStore = store;
 }
 
 function ensureDataDir() {
