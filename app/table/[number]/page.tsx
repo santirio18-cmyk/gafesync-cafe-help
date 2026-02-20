@@ -48,7 +48,7 @@ export default function TableHelpPage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-gamesync-pattern">
-      <header className="bg-[#1a1a1a] border-b-4 border-[#ea580c]">
+      <header className="bg-[var(--logo-bg)] border-b-4 border-[var(--logo-accent)]">
         <div className="flex justify-center py-4 px-4">
           <Image
             src="/logo.png"

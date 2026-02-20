@@ -170,19 +170,19 @@ export default function StaffDashboardPage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-[#faf9f7]">
-      <header className="flex items-center justify-between bg-[#1a1a1a] px-4 py-3">
+      <header className="flex items-center justify-between bg-[var(--logo-bg)] border-b-4 border-[var(--logo-accent)] px-4 py-3">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/logo.png" alt="GameSync" className="h-9 w-auto object-contain" />
-        <span className="text-sm font-medium text-white/80">
+        <span className="text-sm font-medium text-[#1c1917]">
           {staff ? (
-            <>Staff · {staff.displayName || staff.username} <span className="text-white/50">({staff.id})</span></>
+            <>Staff · {staff.displayName || staff.username} <span className="text-[#78716c]">({staff.id})</span></>
           ) : (
             "Staff"
           )}
         </span>
         <button
           onClick={logout}
-          className="text-sm font-medium text-white/80 hover:text-white transition-colors"
+          className="text-sm font-medium text-[#c2410c] hover:text-[#9a3412] transition-colors"
         >
           Log out
         </button>

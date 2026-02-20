@@ -46,9 +46,9 @@ export default function AdminPage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-[#faf9f7]">
-      <header className="flex items-center justify-between bg-[#1a1a1a] px-4 py-3">
+      <header className="flex items-center justify-between bg-[var(--logo-bg)] border-b-4 border-[var(--logo-accent)] px-4 py-3">
         <Image src="/logo.png" alt="GameSync" width={150} height={62} className="object-contain" />
-        <span className="text-sm font-medium text-white/80">Admin</span>
+        <span className="text-sm font-medium text-[#1c1917]">Admin</span>
         <span className="w-14" />
       </header>
       <div className="flex-1 p-6">

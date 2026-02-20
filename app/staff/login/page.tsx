@@ -37,7 +37,7 @@ export default function StaffLoginPage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-[#faf9f7]">
-      <header className="flex justify-center bg-[#1a1a1a] py-5">
+      <header className="flex justify-center bg-[var(--logo-bg)] border-b-4 border-[var(--logo-accent)] py-5">
         <Image
           src="/logo.png"
           alt="GameSync"
