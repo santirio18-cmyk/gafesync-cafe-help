@@ -1,36 +1,52 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# GafeSync Cafe — Table Help Tool
 
-## Getting Started
+Each table has a number and a QR code. When a customer scans the QR code, they see a **Need Help** button. When they tap it, all **active staff** (logged in on the staff dashboard) get notified and can mark **I'm attending**.
 
-First, run the development server:
+## Quick start
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+1. **Install and run**
+   ```bash
+   npm install
+   npm run dev
+   ```
+   Open [http://localhost:3000](http://localhost:3000).
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. **First-time setup**
+   - Go to **Admin** ([/admin](http://localhost:3000/admin)).
+   - Click **Run setup** to create tables 1–8 and a default staff account.
+   - Default staff login: **staff** / **gafesync123**.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+3. **Print QR codes**
+   - On the Admin page, QR codes for each table are shown.
+   - Print the page (or each table’s card) and stick one QR on each table.
+   - Each QR links to `yoursite.com/table/1`, `yoursite.com/table/2`, etc.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+4. **Staff**
+   - Staff go to **Staff login** ([/staff/login](http://localhost:3000/staff/login)) and log in.
+   - They keep the **Staff** dashboard open ([/staff](http://localhost:3000/staff)).
+   - When a customer taps “Need Help”, a new request appears on the dashboard.
+   - Any active staff can click **I'm attending** to mark it and go to the table.
 
-## Learn More
+## Pages
 
-To learn more about Next.js, take a look at the following resources:
+| Page | Who | Purpose |
+|------|-----|--------|
+| `/` | Anyone | Home with links to Staff login and Admin |
+| `/table/[number]` | Customers | Opened by scanning table QR; “Need Help” button |
+| `/staff/login` | Staff | Log in |
+| `/staff` | Staff | Dashboard: pending help requests, “I’m attending” |
+| `/admin` | You | Setup (tables + default staff), view/print QR codes |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Data
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- Tables, help requests, staff, and sessions are stored in `data/store.json` (created on first use).
+- Staff stay “active” while they have the staff dashboard open (heartbeat every minute). After ~5 minutes without a heartbeat they are no longer considered active.
 
-## Deploy on Vercel
+## Optional: add more staff
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Right now the only way to add staff is via the setup API (default user). You can add an “Add staff” form in Admin and call a new API that uses `createStaff` from `lib/store.ts` with a bcrypt-hashed password.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Deploy
+
+- Run `npm run build` then `npm start`, or deploy to Vercel/Railway etc.
+- For production, set `SETUP_SECRET` in the environment and pass it in the body when calling `POST /api/setup` so only you can run setup.
