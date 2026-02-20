@@ -84,12 +84,12 @@ export default function AdminPage() {
           )}
 
           {tables.length === 0 && !connectionError && (
-            <div className="mb-6 rounded-2xl bg-white p-6 shadow-sm border border-[#e7e5e4]">
+            <div className="mb-6 rounded-2xl bg-white p-6 shadow-sm border border-[var(--logo-accent)]/10">
               <p className="text-[#1c1917] font-medium mb-2">No tables yet</p>
               <p className="text-[#57534e] text-sm mb-4">Click once to create tables 1–8 and staff accounts. After that, your QR codes are ready—paste them at tables and they work forever. (Runs automatically if the list is empty.)</p>
               <button
                 onClick={runSetup}
-                className="rounded-xl bg-[#c2410c] text-white font-medium py-2.5 px-4 hover:bg-[#9a3412] transition-colors"
+                className="rounded-xl bg-[var(--logo-accent)] text-white font-medium py-2.5 px-4 hover:bg-[var(--logo-accent-dim)] transition-colors"
               >
                 Run setup
               </button>
@@ -124,7 +124,7 @@ export default function AdminPage() {
               )}
               <div className="grid gap-5 sm:grid-cols-2">
                 {tables.map((t) => (
-                  <div key={t.id} className="rounded-2xl bg-white p-5 shadow-sm border border-[#e7e5e4]">
+                  <div key={t.id} className="rounded-2xl bg-white p-5 shadow-sm border border-[var(--logo-accent)]/10">
                     <p className="text-[#1c1917] font-medium text-center mb-3">Table {t.number}</p>
                     <div className="flex justify-center">
                       <QRCode value={`${baseUrl}/table/${t.number}`} size={140} />

@@ -30,7 +30,7 @@ export default function TableHelpPage() {
         });
         const data = await res.json();
         if (res.ok) {
-          setMessage("Help is on the way! A Game Guru will be with you shortly.");
+          setMessage("🎲 Your Game Guru is on the way!");
           setStatus("success");
           return;
         }
@@ -43,7 +43,7 @@ export default function TableHelpPage() {
       }
     }
     setMessage(
-      "We've noted your table. A Game Guru will be with you shortly. If no one arrives in a couple of minutes, please wave or ask at the counter—we're here to help."
+      "Your table is noted. A Game Guru will join you shortly. If no one arrives in a couple of minutes, wave or ask at the counter—we're here to assist."
     );
     setStatus("success");
   };
@@ -58,56 +58,51 @@ export default function TableHelpPage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-gamesync-pattern">
-      <header className="bg-[var(--logo-bg)] border-b-4 border-[var(--logo-accent)]">
-        <div className="flex justify-center py-4 px-4">
-          <Image
-            src="/logo.png"
-            alt="GameSync — Gamers on-board"
-            width={200}
-            height={84}
-            className="object-contain"
-          />
-        </div>
+      <header className="w-full bg-[var(--bg-header)] flex flex-col items-center pt-5 pb-4 px-4 shadow-md border-b border-white/10">
+        <Image
+          src="/logo.png"
+          alt="GameSync Cafe"
+          width={300}
+          height={126}
+          className="object-contain"
+        />
+        <p className="text-white/90 text-lg font-light tracking-widest mt-2">Gamers On Board</p>
       </header>
 
       <div className="flex-1 flex flex-col items-center justify-center p-6">
-        <div className="w-full max-w-[380px] rounded-2xl bg-white p-8 shadow-xl border-2 border-[#ea580c]/30">
-          <div className="text-center mb-6">
+        <div className="w-full max-w-[380px] rounded-[20px] bg-white py-10 px-8 shadow-xl border border-[var(--logo-accent)]/10">
+          <div className="text-center mb-8">
             <h1 className="text-2xl font-bold text-[#1c1917] mb-1">Welcome to GameSync Cafe</h1>
-            <p className="text-[#78716c] text-sm">Table {tableNumber}</p>
-            <p className="text-[#57534e] text-xs mt-3 font-medium">
-              Catan · Carcassonne · Ticket to Ride & more
-            </p>
+            <p className="text-[#78716c] text-sm font-medium">Table {tableNumber}</p>
           </div>
-
-          <p className="text-[#57534e] text-center text-sm mb-6 leading-relaxed">
-            Need something? Tap below and a Game Guru will come to your table.
-          </p>
 
           <button
             onClick={needHelp}
             disabled={status === "loading"}
-            className="w-full rounded-xl bg-[#ea580c] text-white font-bold text-lg py-4 px-6 hover:bg-[#c2410c] disabled:opacity-60 transition-all shadow-md hover:shadow-lg border-2 border-[#c2410c]/20"
+            className="btn-call-guru w-full rounded-2xl bg-[var(--logo-accent)] text-white font-bold text-lg py-5 px-6 hover:bg-[var(--logo-accent-dim)] disabled:opacity-60 transition-all duration-150 active:scale-[0.98]"
           >
             {status === "loading" ? (
               <span className="flex items-center justify-center gap-2">
                 <span className="inline-block w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                Sending…
+                Calling your Guru…
               </span>
             ) : (
-              "Need Help"
+              "Call Game Guru"
             )}
           </button>
 
+          <p className="text-[#78716c] text-xs text-center mt-4">
+            Rules explained • Game suggestions • Setup assistance
+          </p>
+
           {message && (
             <div
-              className={`mt-5 p-4 rounded-xl text-center text-sm font-medium ${
+              className={`mt-8 p-5 rounded-2xl text-center text-sm font-medium ${
                 status === "success"
-                  ? "bg-green-50 text-green-700 border border-green-200"
+                  ? "bg-emerald-50 text-emerald-800 border border-emerald-200/80"
                   : "bg-red-50 text-red-700 border border-red-200"
               }`}
             >
-              {status === "success" && "✓ "}
               {message}
             </div>
           )}

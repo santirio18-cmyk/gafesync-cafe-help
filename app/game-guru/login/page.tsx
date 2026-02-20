@@ -36,7 +36,7 @@ export default function GameGuruLoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#faf9f7]">
+    <div className="min-h-screen flex flex-col bg-gamesync-pattern">
       <header className="flex justify-center bg-[var(--logo-bg)] border-b-4 border-[var(--logo-accent)] py-5">
         <Image
           src="/logo.png"
@@ -47,7 +47,7 @@ export default function GameGuruLoginPage() {
         />
       </header>
       <div className="flex-1 flex items-center justify-center p-5">
-        <div className="w-full max-w-[360px] rounded-2xl bg-white p-8 shadow-sm border border-[#e7e5e4]">
+        <div className="w-full max-w-[360px] rounded-2xl bg-white p-8 shadow-lg border border-[var(--logo-accent)]/20">
           <h1 className="text-[#1c1917] font-semibold text-lg text-center mb-1">Game Guru login</h1>
           <p className="text-[#78716c] text-sm text-center mb-6">Sign in to see help requests</p>
           <form onSubmit={submit} className="space-y-4">
@@ -86,7 +86,7 @@ export default function GameGuruLoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full rounded-xl bg-[#c2410c] text-white font-medium py-3 px-4 hover:bg-[#9a3412] disabled:opacity-60 transition-colors"
+              className="w-full rounded-xl bg-[var(--logo-accent)] text-white font-medium py-3 px-4 hover:bg-[var(--logo-accent-dim)] disabled:opacity-60 transition-colors"
             >
               {loading ? "Signing in…" : "Sign in"}
             </button>

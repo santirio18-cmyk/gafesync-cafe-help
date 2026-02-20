@@ -168,7 +168,7 @@ export default function GameGuruDashboardPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#faf9f7]">
+    <div className="min-h-screen flex flex-col bg-gamesync-pattern">
       <header className="flex items-center justify-between bg-[var(--logo-bg)] border-b-4 border-[var(--logo-accent)] px-4 py-3">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/logo.png" alt="GameSync" className="h-9 w-auto object-contain" />
@@ -193,7 +193,7 @@ export default function GameGuruDashboardPage() {
               {error}
             </div>
           )}
-          <section className="rounded-2xl bg-white p-6 shadow-sm border border-[#e7e5e4]">
+          <section className="rounded-2xl bg-white p-6 shadow-sm border border-[var(--logo-accent)]/10">
             <div className="flex items-center justify-between gap-4 mb-4">
               <h2 className="text-[#1c1917] font-semibold text-base">Help requests</h2>
               {typeof window !== "undefined" && "Notification" in window && notificationPermission !== "granted" && (
@@ -223,7 +223,7 @@ export default function GameGuruDashboardPage() {
                     </div>
                     <button
                       onClick={() => attend(r.id)}
-                      className="rounded-lg bg-[#c2410c] text-white text-sm font-medium py-2 px-4 hover:bg-[#9a3412] transition-colors"
+                      className="rounded-lg bg-[var(--logo-accent)] text-white text-sm font-medium py-2 px-4 hover:bg-[var(--logo-accent-dim)] transition-colors"
                     >
                       I’m attending
                     </button>

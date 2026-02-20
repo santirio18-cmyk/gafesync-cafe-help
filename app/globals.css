@@ -32,9 +32,24 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Subtle board-game style background (dice-dot pattern) */
+/* Page background – warm tone to match logo */
 .bg-gamesync-pattern {
   background-color: #fef7ed;
   background-image: radial-gradient(circle at 1px 1px, rgba(234, 88, 12, 0.06) 1px, transparent 0);
   background-size: 24px 24px;
+}
+
+/* Customer table: call button gentle pulse (every ~6s) */
+@keyframes guru-pulse {
+  0%, 90%, 100% { box-shadow: 0 4px 14px rgba(234, 88, 12, 0.35); }
+  93%, 97% { box-shadow: 0 4px 20px 2px rgba(234, 88, 12, 0.45); }
+}
+.btn-call-guru {
+  animation: guru-pulse 6s ease-in-out infinite;
+}
+.btn-call-guru:active:not(:disabled) {
+  transform: scale(0.98);
+}
+.btn-call-guru:disabled {
+  animation: none;
 }
