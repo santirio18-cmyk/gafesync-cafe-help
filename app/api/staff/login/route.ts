@@ -8,6 +8,11 @@ const COOKIE_MAX_AGE = 60 * 60 * 24 * 7; // 7 days
 const DEFAULT_USERS: { username: string; password: string; displayName: string }[] = [
   { username: "admin", password: "admin123", displayName: "Admin" },
   { username: "staff", password: "gamesync123", displayName: "Cafe Staff" },
+  { username: "sanajay", password: "gamesync123", displayName: "Sanajay" },
+  { username: "arvind", password: "gamesync123", displayName: "Arvind" },
+  { username: "chiti", password: "gamesync123", displayName: "Chiti" },
+  { username: "ashok", password: "gamesync123", displayName: "Ashok" },
+  { username: "bivish", password: "gamesync123", displayName: "Bivish" },
 ];
 
 export async function POST(request: NextRequest) {

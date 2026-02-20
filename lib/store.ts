@@ -72,13 +72,15 @@ async function save(store: Store): Promise<void> {
   const redisUrl = process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL;
   const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN;
   if (redisUrl && redisToken) {
-    try {
-      const { Redis } = await import("@upstash/redis");
-      const redis = new Redis({ url: redisUrl, token: redisToken });
-      await redis.set(KV_KEY, JSON.stringify(store));
-      return;
-    } catch {
-      // fall through
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        const { Redis } = await import("@upstash/redis");
+        const redis = new Redis({ url: redisUrl, token: redisToken });
+        await redis.set(KV_KEY, JSON.stringify(store));
+        return;
+      } catch {
+        if (attempt === 0) await new Promise((r) => setTimeout(r, 400));
+      }
     }
   }
   try {

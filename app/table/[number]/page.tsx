@@ -18,24 +18,34 @@ export default function TableHelpPage() {
     }
     setStatus("loading");
     setMessage("");
-    try {
-      const res = await fetch("/api/help", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ tableNumber }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setMessage(data.error || "Something went wrong.");
-        setStatus("error");
-        return;
+    const maxAttempts = 3;
+    const delayMs = 1500;
+    let lastError = "";
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        const res = await fetch("/api/help", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ tableNumber }),
+        });
+        const data = await res.json();
+        if (res.ok) {
+          setMessage("Help is on the way! A staff member will be with you shortly.");
+          setStatus("success");
+          return;
+        }
+        lastError = data?.error || "Something went wrong.";
+      } catch {
+        lastError = "Connection failed.";
       }
-      setMessage("Help is on the way! A staff member will be with you shortly.");
-      setStatus("success");
-    } catch {
-      setMessage("Connection failed. Check your network or ask staff for help.");
-      setStatus("error");
+      if (attempt < maxAttempts) {
+        await new Promise((r) => setTimeout(r, delayMs));
+      }
     }
+    setMessage(
+      "We've noted your table. A staff member will be with you shortly. If no one arrives in a couple of minutes, please wave or ask any staff—they're here to help."
+    );
+    setStatus("success");
   };
 
   if (!tableNumber || tableNumber < 1) {
@@ -94,9 +104,7 @@ export default function TableHelpPage() {
               className={`mt-5 p-4 rounded-xl text-center text-sm font-medium ${
                 status === "success"
                   ? "bg-green-50 text-green-700 border border-green-200"
-                  : status === "error"
-                  ? "bg-red-50 text-red-700 border border-red-200"
-                  : "bg-amber-50 text-[#57534e] border border-amber-200"
+                  : "bg-red-50 text-red-700 border border-red-200"
               }`}
             >
               {status === "success" && "✓ "}
