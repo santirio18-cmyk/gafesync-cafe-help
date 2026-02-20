@@ -65,14 +65,14 @@ export default function AdminPage() {
           {tables.length === 0 && !connectionError && (
             <div className="mb-6 rounded-2xl bg-white p-6 shadow-sm border border-[#e7e5e4]">
               <p className="text-[#1c1917] font-medium mb-2">No tables yet</p>
-              <p className="text-[#57534e] text-sm mb-4">Run setup to create tables 1–8 and a default staff account.</p>
+              <p className="text-[#57534e] text-sm mb-4">Run setup to create tables 1–8 and default staff: <strong>staff</strong> / gamesync123 and <strong>admin</strong> / admin123.</p>
               <button
                 onClick={runSetup}
                 className="rounded-xl bg-[#c2410c] text-white font-medium py-2.5 px-4 hover:bg-[#9a3412] transition-colors"
               >
                 Run setup
               </button>
-              {setupDone && <p className="mt-3 text-sm text-green-700">Done. Default login: staff / gamesync123</p>}
+              {setupDone && <p className="mt-3 text-sm text-green-700">Done. Staff logins: staff / gamesync123 · admin / admin123</p>}
             </div>
           )}
 

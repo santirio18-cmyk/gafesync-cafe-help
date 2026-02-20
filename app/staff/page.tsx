@@ -10,6 +10,8 @@ type HelpRequest = {
   status: string;
 };
 
+type StaffMe = { id: string; username: string; displayName: string } | null;
+
 function playNotificationSound() {
   try {
     const ctx = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
@@ -60,6 +62,7 @@ function showBrowserNotification(tableNumber: number) {
 export default function StaffDashboardPage() {
   const router = useRouter();
   const [requests, setRequests] = useState<HelpRequest[]>([]);
+  const [staff, setStaff] = useState<StaffMe>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [notificationPermission, setNotificationPermission] = useState<NotificationPermission | null>(null);
@@ -109,8 +112,15 @@ export default function StaffDashboardPage() {
 
   useEffect(() => {
     fetch("/api/staff/me")
-      .then((r) => {
-        if (r.status === 401) router.push("/staff/login");
+      .then(async (r) => {
+        if (r.status === 401) {
+          router.push("/staff/login");
+          return;
+        }
+        if (r.ok) {
+          const data = await r.json();
+          setStaff(data);
+        }
       })
       .catch(() => {
         setError("Connection failed. Start the server with: npm run dev");
@@ -163,7 +173,13 @@ export default function StaffDashboardPage() {
       <header className="flex items-center justify-between bg-[#1a1a1a] px-4 py-3">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/logo.png" alt="GameSync" className="h-9 w-auto object-contain" />
-        <span className="text-sm font-medium text-white/80">Staff</span>
+        <span className="text-sm font-medium text-white/80">
+          {staff ? (
+            <>Staff · {staff.displayName || staff.username} <span className="text-white/50">({staff.id})</span></>
+          ) : (
+            "Staff"
+          )}
+        </span>
         <button
           onClick={logout}
           className="text-sm font-medium text-white/80 hover:text-white transition-colors"
