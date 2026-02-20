@@ -1,5 +1,6 @@
 import { NextRequest } from "next/server";
-import { createHelpRequest, getHelpRequests } from "@/lib/store";
+import { createHelpRequest, getHelpRequests, getStaffById } from "@/lib/store";
+import { getStaffIdFromRequest, getSessionFromRequest } from "@/lib/auth";
 
 export async function POST(request: NextRequest) {
   try {
@@ -28,6 +29,17 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   const onlyPending = request.nextUrl.searchParams.get("pending") === "true";
+  if (onlyPending) {
+    const staffId = await getStaffIdFromRequest();
+    if (!staffId) return Response.json({ error: "Unauthorized" }, { status: 401 });
+  } else {
+    const session = await getSessionFromRequest();
+    const staffId = session?.staffId ?? (await getStaffIdFromRequest());
+    if (!staffId) return Response.json({ error: "Unauthorized" }, { status: 401 });
+    const staff = await getStaffById(staffId);
+    const username = session?.username ?? staff?.username;
+    if (username !== "admin") return Response.json({ error: "Admin only" }, { status: 403 });
+  }
   const requests = await getHelpRequests(onlyPending);
   return Response.json(requests);
 }
