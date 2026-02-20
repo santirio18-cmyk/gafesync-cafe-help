@@ -8,7 +8,7 @@ export async function POST(request: NextRequest) {
     if (!Number.isInteger(tableNumber) || tableNumber < 1) {
       return Response.json({ error: "Invalid table number" }, { status: 400 });
     }
-    const req = createHelpRequest(tableNumber);
+    const req = await createHelpRequest(tableNumber);
     return Response.json(req);
   } catch (e) {
     const message = e instanceof Error ? e.message : "Failed to create help request";
@@ -18,6 +18,6 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   const onlyPending = request.nextUrl.searchParams.get("pending") === "true";
-  const requests = getHelpRequests(onlyPending);
+  const requests = await getHelpRequests(onlyPending);
   return Response.json(requests);
 }

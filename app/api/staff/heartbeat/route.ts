@@ -6,6 +6,6 @@ export async function POST() {
   if (!token) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
-  const ok = heartbeat(token);
+  const ok = await heartbeat(token);
   return Response.json({ ok });
 }

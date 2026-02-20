@@ -19,11 +19,13 @@ function getLocalNetworkUrl(port: string): string {
 
 export async function GET(request: NextRequest) {
   const host = request.headers.get("host") || "localhost:3000";
+  const isVercel = host.includes("vercel.app");
   const port = host.includes(":") ? host.split(":")[1] : "3000";
   const localUrl = getLocalNetworkUrl(port);
+  const protocol = request.headers.get("x-forwarded-proto") || "https";
+  const base = isVercel ? `${protocol}://${host}` : (localUrl || `http://${host}`);
   return Response.json({
-    // Use local IP for QR codes so phones on same WiFi can open the link
-    qrBaseUrl: localUrl || `http://${host}`,
+    qrBaseUrl: base,
     origin: request.nextUrl.origin,
   });
 }

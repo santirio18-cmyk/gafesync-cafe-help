@@ -11,5 +11,5 @@ export async function getStaffToken(): Promise<string | null> {
 export async function getStaffIdFromRequest(): Promise<string | null> {
   const token = await getStaffToken();
   if (!token) return null;
-  return getSessionStaffId(token);
+  return await getSessionStaffId(token);
 }

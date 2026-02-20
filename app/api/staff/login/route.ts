@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
     if (!username || !password) {
       return Response.json({ error: "Username and password required" }, { status: 400 });
     }
-    const staff = getStaffByUsername(username);
+    const staff = await getStaffByUsername(username);
     if (!staff) {
       return Response.json({ error: "Invalid username or password" }, { status: 401 });
     }
@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
     if (!ok) {
       return Response.json({ error: "Invalid username or password" }, { status: 401 });
     }
-    const token = createSession(staff.id);
+    const token = await createSession(staff.id);
     const res = NextResponse.json({
       ok: true,
       staff: { id: staff.id, username: staff.username, displayName: staff.displayName },

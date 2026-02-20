@@ -11,12 +11,12 @@ export async function POST(
   if (!staffId) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
-  const staff = getStaffById(staffId);
+  const staff = await getStaffById(staffId);
   if (!staff) {
     return Response.json({ error: "Staff not found" }, { status: 401 });
   }
   const { id } = await params;
-  const req = attendHelpRequest(id, staff.id, staff.displayName || staff.username);
+  const req = await attendHelpRequest(id, staff.id, staff.displayName || staff.username);
   if (!req) {
     return Response.json({ error: "Request not found or already attended" }, { status: 404 });
   }

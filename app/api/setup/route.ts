@@ -11,22 +11,22 @@ export async function POST(request: NextRequest) {
       return Response.json({ error: "Forbidden" }, { status: 403 });
     }
     const created: string[] = [];
-    if (getTables().length === 0) {
+    const tables = await getTables();
+    if (tables.length === 0) {
       const tableNumbers = [1, 2, 3, 4, 5, 6, 7, 8];
-      for (const n of tableNumbers) addTable(n);
+      for (const n of tableNumbers) await addTable(n);
       created.push("tables: " + tableNumbers.join(", "));
     }
     const defaultUsername = body?.staffUsername || "staff";
     const defaultPassword = body?.staffPassword || "gamesync123";
-    if (!getStaffByUsername(defaultUsername)) {
+    if (!(await getStaffByUsername(defaultUsername))) {
       const hash = await bcrypt.hash(defaultPassword, 10);
-      createStaff(defaultUsername, hash, "Cafe Staff");
+      await createStaff(defaultUsername, hash, "Cafe Staff");
       created.push("staff user: " + defaultUsername);
     }
-    // Always ensure admin user exists
-    if (!getStaffByUsername("admin")) {
+    if (!(await getStaffByUsername("admin"))) {
       const adminHash = await bcrypt.hash("admin123", 10);
-      createStaff("admin", adminHash, "Admin");
+      await createStaff("admin", adminHash, "Admin");
       created.push("staff user: admin");
     }
     return Response.json({ ok: true, created });

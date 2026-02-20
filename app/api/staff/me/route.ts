@@ -6,7 +6,7 @@ export async function GET() {
   if (!staffId) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
-  const staff = getStaffById(staffId);
+  const staff = await getStaffById(staffId);
   if (!staff) {
     return Response.json({ error: "Staff not found" }, { status: 401 });
   }

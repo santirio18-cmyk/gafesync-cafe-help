@@ -20,12 +20,12 @@ export async function POST(request: NextRequest) {
         skipped.push((username || "?") + " (missing username or password)");
         continue;
       }
-      if (getStaffByUsername(username)) {
+      if (await getStaffByUsername(username)) {
         skipped.push(username + " (already exists)");
         continue;
       }
       const hash = await bcrypt.hash(password, 10);
-      createStaff(username, hash, displayName);
+      await createStaff(username, hash, displayName);
       created.push(username);
     }
     return Response.json({ ok: true, created, skipped });

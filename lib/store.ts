@@ -3,6 +3,7 @@ import { join } from "path";
 
 const DATA_DIR = join(process.cwd(), "data");
 const DATA_FILE = join(DATA_DIR, "store.json");
+const KV_KEY = "gafesync:store";
 
 export type Table = { id: string; number: number };
 export type HelpRequest = {
@@ -32,11 +33,23 @@ const defaultStore: Store = {
   sessions: [],
 };
 
-function ensureDataDir() {
-  if (!existsSync(DATA_DIR)) mkdirSync(DATA_DIR, { recursive: true });
+function generateId() {
+  return Math.random().toString(36).slice(2) + Date.now().toString(36);
 }
 
-function load(): Store {
+async function load(): Promise<Store> {
+  const redisUrl = process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL;
+  const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN;
+  if (redisUrl && redisToken) {
+    try {
+      const { Redis } = await import("@upstash/redis");
+      const redis = new Redis({ url: redisUrl, token: redisToken });
+      const raw = await redis.get<string>(KV_KEY);
+      if (raw) return { ...defaultStore, ...JSON.parse(raw) };
+    } catch {
+      // fall through to file
+    }
+  }
   ensureDataDir();
   if (!existsSync(DATA_FILE)) return { ...defaultStore };
   try {
@@ -47,38 +60,50 @@ function load(): Store {
   }
 }
 
-function save(store: Store) {
+async function save(store: Store): Promise<void> {
+  const redisUrl = process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL;
+  const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN;
+  if (redisUrl && redisToken) {
+    try {
+      const { Redis } = await import("@upstash/redis");
+      const redis = new Redis({ url: redisUrl, token: redisToken });
+      await redis.set(KV_KEY, JSON.stringify(store));
+      return;
+    } catch {
+      // fall through
+    }
+  }
   ensureDataDir();
   writeFileSync(DATA_FILE, JSON.stringify(store, null, 2), "utf-8");
 }
 
-function generateId() {
-  return Math.random().toString(36).slice(2) + Date.now().toString(36);
+function ensureDataDir() {
+  if (!existsSync(DATA_DIR)) mkdirSync(DATA_DIR, { recursive: true });
 }
 
 // Tables
-export function getTables(): Table[] {
-  return load().tables;
+export async function getTables(): Promise<Table[]> {
+  return (await load()).tables;
 }
 
-export function addTable(number: number): Table {
-  const store = load();
+export async function addTable(number: number): Promise<Table> {
+  const store = await load();
   if (store.tables.some((t) => t.number === number)) {
     throw new Error("Table number already exists");
   }
   const table: Table = { id: generateId(), number };
   store.tables.push(table);
-  save(store);
+  await save(store);
   return table;
 }
 
-export function getTableByNumber(num: number): Table | undefined {
-  return load().tables.find((t) => t.number === num);
+export async function getTableByNumber(num: number): Promise<Table | undefined> {
+  return (await load()).tables.find((t) => t.number === num);
 }
 
 // Help requests
-export function createHelpRequest(tableNumber: number): HelpRequest {
-  const store = load();
+export async function createHelpRequest(tableNumber: number): Promise<HelpRequest> {
+  const store = await load();
   const table = store.tables.find((t) => t.number === tableNumber);
   if (!table) throw new Error("Table not found");
   const req: HelpRequest = {
@@ -89,77 +114,85 @@ export function createHelpRequest(tableNumber: number): HelpRequest {
     status: "pending",
   };
   store.helpRequests.push(req);
-  save(store);
+  await save(store);
   return req;
 }
 
-export function getHelpRequests(onlyPending = false): HelpRequest[] {
-  const reqs = load().helpRequests;
+export async function getHelpRequests(onlyPending = false): Promise<HelpRequest[]> {
+  const reqs = (await load()).helpRequests;
   return onlyPending ? reqs.filter((r) => r.status === "pending") : reqs;
 }
 
-export function attendHelpRequest(requestId: string, staffId: string, staffName: string): HelpRequest | null {
-  const store = load();
+export async function attendHelpRequest(
+  requestId: string,
+  staffId: string,
+  staffName: string
+): Promise<HelpRequest | null> {
+  const store = await load();
   const req = store.helpRequests.find((r) => r.id === requestId);
   if (!req || req.status !== "pending") return null;
   req.status = "attended";
   req.attendedBy = staffId;
   req.attendedByName = staffName;
   req.attendedAt = new Date().toISOString();
-  save(store);
+  await save(store);
   return req;
 }
 
 // Staff
-export function getStaffByUsername(username: string): Staff | undefined {
-  return load().staff.find((s) => s.username.toLowerCase() === username.toLowerCase());
+export async function getStaffByUsername(username: string): Promise<Staff | undefined> {
+  return (await load()).staff.find((s) => s.username.toLowerCase() === username.toLowerCase());
 }
 
-export function getStaffById(id: string): Staff | undefined {
-  return load().staff.find((s) => s.id === id);
+export async function getStaffById(id: string): Promise<Staff | undefined> {
+  return (await load()).staff.find((s) => s.id === id);
 }
 
-export function createStaff(username: string, passwordHash: string, displayName: string): Staff {
-  const store = load();
+export async function createStaff(
+  username: string,
+  passwordHash: string,
+  displayName: string
+): Promise<Staff> {
+  const store = await load();
   if (store.staff.some((s) => s.username.toLowerCase() === username.toLowerCase())) {
     throw new Error("Username already exists");
   }
   const staff: Staff = { id: generateId(), username, passwordHash, displayName };
   store.staff.push(staff);
-  save(store);
+  await save(store);
   return staff;
 }
 
 // Sessions (active staff)
 const HEARTBEAT_MAX_AGE_MS = 5 * 60 * 1000; // 5 min
 
-export function createSession(staffId: string): string {
-  const store = load();
+export async function createSession(staffId: string): Promise<string> {
+  const store = await load();
   const token = generateId();
   store.sessions = store.sessions.filter((s) => s.staffId !== staffId);
   store.sessions.push({ staffId, token, lastHeartbeat: Date.now() });
-  save(store);
+  await save(store);
   return token;
 }
 
-export function getSessionStaffId(token: string): string | null {
-  const store = load();
+export async function getSessionStaffId(token: string): Promise<string | null> {
+  const store = await load();
   const s = store.sessions.find((x) => x.token === token);
   if (!s || Date.now() - s.lastHeartbeat > HEARTBEAT_MAX_AGE_MS) return null;
   return s.staffId;
 }
 
-export function heartbeat(token: string): boolean {
-  const store = load();
+export async function heartbeat(token: string): Promise<boolean> {
+  const store = await load();
   const s = store.sessions.find((x) => x.token === token);
   if (!s) return false;
   s.lastHeartbeat = Date.now();
-  save(store);
+  await save(store);
   return true;
 }
 
-export function getActiveStaff(): Staff[] {
-  const store = load();
+export async function getActiveStaff(): Promise<Staff[]> {
+  const store = await load();
   const now = Date.now();
   const activeIds = new Set(
     store.sessions.filter((s) => now - s.lastHeartbeat <= HEARTBEAT_MAX_AGE_MS).map((s) => s.staffId)
@@ -167,8 +200,8 @@ export function getActiveStaff(): Staff[] {
   return store.staff.filter((s) => activeIds.has(s.id));
 }
 
-export function logout(token: string) {
-  const store = load();
+export async function logout(token: string): Promise<void> {
+  const store = await load();
   store.sessions = store.sessions.filter((s) => s.token !== token);
-  save(store);
+  await save(store);
 }
