@@ -46,6 +46,25 @@ Each table has a number and a QR code. When a customer scans the QR code, they s
 
 Right now the only way to add staff is via the setup API (default user). You can add an “Add staff” form in Admin and call a new API that uses `createStaff` from `lib/store.ts` with a bcrypt-hashed password.
 
+## Put on GitHub
+
+1. **Create a new repo on GitHub**
+   - Go to [github.com](https://github.com) and sign in.
+   - Click the **+** (top right) → **New repository**.
+   - Name it e.g. `gafesync-cafe-help`.
+   - Leave “Add a README” **unchecked** (you already have one).
+   - Click **Create repository**.
+
+2. **Push your code** (run these in the project folder):
+   ```bash
+   cd /Users/santhoshpremkumar/gafesync-cafe-help
+   git remote add origin https://github.com/YOUR_USERNAME/gafesync-cafe-help.git
+   git push -u origin main
+   ```
+   Replace `YOUR_USERNAME` with your GitHub username. If GitHub asks for a password, use a **Personal Access Token** (Settings → Developer settings → Personal access tokens).
+
+After that, your project is on GitHub. You can later connect it to Vercel/Netlify to get a live link so you don’t need to run `npm run dev` yourself.
+
 ## Deploy
 
 - Run `npm run build` then `npm start`, or deploy to Vercel/Railway etc.
