@@ -1,9 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
-import { getStaffByUsername, createSession } from "@/lib/store";
+import { getStaffByUsername, createSession, createStaff } from "@/lib/store";
 
 const STAFF_COOKIE = "gafesync_staff_token";
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 7; // 7 days
+
+const DEFAULT_USERS: { username: string; password: string; displayName: string }[] = [
+  { username: "admin", password: "admin123", displayName: "Admin" },
+  { username: "staff", password: "gamesync123", displayName: "Cafe Staff" },
+];
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,11 +18,18 @@ export async function POST(request: NextRequest) {
     if (!username || !password) {
       return Response.json({ error: "Username and password required" }, { status: 400 });
     }
-    const staff = await getStaffByUsername(username);
+    let staff = await getStaffByUsername(username);
+    if (!staff) {
+      const def = DEFAULT_USERS.find((u) => u.username.toLowerCase() === username.toLowerCase());
+      if (def && def.password === password) {
+        const hash = await bcrypt.hash(password, 10);
+        staff = await createStaff(def.username, hash, def.displayName);
+      }
+    }
     if (!staff) {
       return Response.json({ error: "Invalid username or password" }, { status: 401 });
     }
-    const ok = await bcrypt.compare(password, staff.passwordHash);
+    const ok = staff.passwordHash ? await bcrypt.compare(password, staff.passwordHash) : false;
     if (!ok) {
       return Response.json({ error: "Invalid username or password" }, { status: 401 });
     }

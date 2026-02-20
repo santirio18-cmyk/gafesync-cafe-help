@@ -75,7 +75,14 @@ export default function StaffLoginPage() {
                 autoComplete="current-password"
               />
             </div>
-            {error && <p className="text-sm text-red-600">{error}</p>}
+            {error && (
+              <div className="space-y-1">
+                <p className="text-sm text-red-600">{error}</p>
+                {error.includes("Invalid") && (
+                  <p className="text-xs text-[#78716c]">First time? Run Setup at Admin, or try admin / admin123</p>
+                )}
+              </div>
+            )}
             <button
               type="submit"
               disabled={loading}
