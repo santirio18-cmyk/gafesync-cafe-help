@@ -76,10 +76,13 @@ export default function GameGuruLoginPage() {
               />
             </div>
             {error && (
-              <div className="space-y-1">
+              <div className="space-y-1.5">
                 <p className="text-sm text-red-600">{error}</p>
                 {error.includes("Invalid") && (
-                  <p className="text-xs text-[#78716c]">First time? Run Setup at Admin, or try admin / admin123</p>
+                  <p className="text-xs text-[#78716c]">Try admin / admin123, or run Setup in Admin. Game Gurus use the unique passwords shown in Admin after setup.</p>
+                )}
+                {typeof window !== "undefined" && window.location.hostname.includes("vercel.app") && (
+                  <p className="text-xs text-[#78716c]">If you sign in but get sent back here, add Redis in Vercel (Storage) so your session persists.</p>
                 )}
               </div>
             )}
