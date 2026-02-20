@@ -1,4 +1,4 @@
-# GafeSync Cafe — Table Help Tool
+# GameSync — Table Help Tool
 
 Each table has a number and a QR code. When a customer scans the QR code, they see a **Need Help** button. When they tap it, all **active staff** (logged in on the staff dashboard) get notified and can mark **I'm attending**.
 
@@ -14,7 +14,7 @@ Each table has a number and a QR code. When a customer scans the QR code, they s
 2. **First-time setup**
    - Go to **Admin** ([/admin](http://localhost:3000/admin)).
    - Click **Run setup** to create tables 1–8 and a default staff account.
-   - Default staff login: **staff** / **gafesync123**.
+   - Default staff login: **staff** / **gamesync123**.
 
 3. **Print QR codes**
    - On the Admin page, QR codes for each table are shown.

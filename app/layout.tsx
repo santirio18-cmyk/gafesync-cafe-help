@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "GafeSync Cafe",
-  description: "Table help & staff notifications for GafeSync Cafe",
+  title: "GameSync",
+  description: "Table help & staff notifications for GameSync",
 };
 
 export default function RootLayout({

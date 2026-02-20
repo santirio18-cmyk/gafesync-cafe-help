@@ -1,21 +1,35 @@
 import Link from "next/link";
+import Image from "next/image";
 
 export default function Home() {
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-amber-50 to-orange-50 p-6">
-      <main className="w-full max-w-md text-center">
-        <h1 className="text-3xl font-bold text-stone-800">GafeSync Cafe</h1>
-        <p className="mt-2 text-stone-600">Board game cafe — table help</p>
-        <div className="mt-10 flex flex-col gap-3">
+    <div className="min-h-screen flex flex-col bg-gamesync-pattern">
+      <header className="bg-[#1a1a1a] border-b-4 border-[#ea580c]">
+        <div className="flex justify-center py-5 px-4">
+          <Image
+            src="/logo.png"
+            alt="GameSync — Gamers on-board"
+            width={220}
+            height={92}
+            className="object-contain"
+            priority
+          />
+        </div>
+      </header>
+      <main className="flex-1 flex flex-col items-center justify-center px-5 py-12">
+        <p className="text-[#57534e] text-center text-lg max-w-sm mb-10">
+          Table help for your board game cafe. Staff get notified when customers need assistance.
+        </p>
+        <div className="w-full max-w-xs flex flex-col gap-3">
           <Link
             href="/staff/login"
-            className="rounded-xl bg-amber-500 px-6 py-3 font-medium text-white hover:bg-amber-600"
+            className="block w-full text-center rounded-xl bg-[#c2410c] text-white font-medium py-3.5 px-5 hover:bg-[#9a3412] transition-colors"
           >
             Staff login
           </Link>
           <Link
             href="/admin"
-            className="rounded-xl border border-amber-500 px-6 py-3 font-medium text-amber-700 hover:bg-amber-50"
+            className="block w-full text-center rounded-xl border border-[#d6d3d1] bg-white text-[#1c1917] font-medium py-3.5 px-5 hover:bg-[#fafaf9] transition-colors"
           >
             Admin — QR codes &amp; setup
           </Link>

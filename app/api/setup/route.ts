@@ -17,11 +17,17 @@ export async function POST(request: NextRequest) {
       created.push("tables: " + tableNumbers.join(", "));
     }
     const defaultUsername = body?.staffUsername || "staff";
-    const defaultPassword = body?.staffPassword || "gafesync123";
+    const defaultPassword = body?.staffPassword || "gamesync123";
     if (!getStaffByUsername(defaultUsername)) {
       const hash = await bcrypt.hash(defaultPassword, 10);
       createStaff(defaultUsername, hash, "Cafe Staff");
       created.push("staff user: " + defaultUsername);
+    }
+    // Always ensure admin user exists
+    if (!getStaffByUsername("admin")) {
+      const adminHash = await bcrypt.hash("admin123", 10);
+      createStaff("admin", adminHash, "Admin");
+      created.push("staff user: admin");
     }
     return Response.json({ ok: true, created });
   } catch (e) {
