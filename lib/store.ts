@@ -119,8 +119,19 @@ export async function getTableByNumber(num: number): Promise<Table | undefined> 
 
 // Help requests
 export async function createHelpRequest(tableNumber: number): Promise<HelpRequest> {
-  const store = await load();
-  const table = store.tables.find((t) => t.number === tableNumber);
+  let store = await load();
+  let table = store.tables.find((t) => t.number === tableNumber);
+  if (!table) {
+    try {
+      await addTable(tableNumber);
+      store = await load();
+      table = store.tables.find((t) => t.number === tableNumber);
+    } catch {
+      // addTable failed (e.g. duplicate)
+      store = await load();
+      table = store.tables.find((t) => t.number === tableNumber);
+    }
+  }
   if (!table) throw new Error("Table not found");
   const req: HelpRequest = {
     id: generateId(),

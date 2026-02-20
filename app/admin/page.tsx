@@ -80,7 +80,11 @@ export default function AdminPage() {
             <div className="space-y-6">
               {baseUrl && (
                 <div className="rounded-xl bg-[#fff7ed] border border-[#ffedd5] px-4 py-3 text-sm text-[#9a3412]">
-                  <strong>Phones:</strong> Use the same WiFi as this computer so scanned QR codes open correctly.
+                  {baseUrl.includes("vercel.app") || baseUrl.startsWith("https://") ? (
+                    <>Customers can scan these QR codes from any phone (cafe WiFi, mobile data, any network).</>
+                  ) : (
+                    <>You&apos;re running locally. Customers on a different network won&apos;t be able to open these links. <strong>For your cafe:</strong> use the QR codes from your live site (e.g. deploy to Vercel) so customers can scan from any network.</>
+                  )}
                 </div>
               )}
               <div className="grid gap-5 sm:grid-cols-2">
