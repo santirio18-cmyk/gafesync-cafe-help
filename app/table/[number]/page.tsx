@@ -48,7 +48,6 @@ export default function TableHelpPage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-gamesync-pattern">
-      {/* Header: logo only, no duplicate text. Orange frame echoes logo. */}
       <header className="bg-[#1a1a1a] border-b-4 border-[#ea580c]">
         <div className="flex justify-center py-4 px-4">
           <Image
