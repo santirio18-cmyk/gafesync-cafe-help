@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
-import { getStaffByUsername, createSession, createStaff } from "@/lib/store";
+import { getStaffByUsername, createStaff } from "@/lib/store";
 import { NAMED_STAFF } from "@/lib/staff-passwords";
+import { createSignedSession } from "@/lib/auth";
 
 const STAFF_COOKIE = "gafesync_staff_token";
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 7; // 7 days
@@ -35,12 +36,16 @@ export async function POST(request: NextRequest) {
     if (!ok) {
       return Response.json({ error: "Invalid username or password" }, { status: 401 });
     }
-    const token = await createSession(staff.id);
+    const signed = createSignedSession({
+      staffId: staff.id,
+      displayName: staff.displayName || staff.username,
+      username: staff.username,
+    });
     const res = NextResponse.json({
       ok: true,
       staff: { id: staff.id, username: staff.username, displayName: staff.displayName },
     });
-    res.cookies.set(STAFF_COOKIE, token, {
+    res.cookies.set(STAFF_COOKIE, signed, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",

@@ -1,17 +1,19 @@
 import { NextRequest } from "next/server";
 import { attendHelpRequest } from "@/lib/store";
-import { getStaffIdFromRequest } from "@/lib/auth";
+import { getSessionFromRequest, getStaffIdFromRequest } from "@/lib/auth";
 import { getStaffById } from "@/lib/store";
 
 export async function POST(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const staffId = await getStaffIdFromRequest();
+  const session = await getSessionFromRequest();
+  const staffId = session?.staffId ?? (await getStaffIdFromRequest());
   if (!staffId) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
-  const staff = await getStaffById(staffId);
+  const staffName = session ? (session.displayName || session.username) : null;
+  const staff = staffName ? { id: staffId, displayName: staffName, username: session!.username } : await getStaffById(staffId);
   if (!staff) {
     return Response.json({ error: "Staff not found" }, { status: 401 });
   }
