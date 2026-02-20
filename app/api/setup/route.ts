@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import bcrypt from "bcryptjs";
 import { createStaff, getTables, addTable, getStaffByUsername } from "@/lib/store";
+import { NAMED_STAFF } from "@/lib/staff-passwords";
 
 // One-time setup: create default staff and tables if empty.
 // In production, if SETUP_SECRET is set you must pass it in body.secret; if not set, setup is allowed from Admin.
@@ -31,21 +32,16 @@ export async function POST(request: NextRequest) {
       await createStaff("admin", adminHash, "Admin");
       created.push("staff user: admin");
     }
-    const namedStaff = [
-      { username: "sanajay", displayName: "Sanajay", password: "gamesync123" },
-      { username: "arvind", displayName: "Arvind", password: "gamesync123" },
-      { username: "chiti", displayName: "Chiti", password: "gamesync123" },
-      { username: "ashok", displayName: "Ashok", password: "gamesync123" },
-      { username: "bivish", displayName: "Bivish", password: "gamesync123" },
-    ];
-    for (const s of namedStaff) {
+    for (const s of NAMED_STAFF) {
       if (!(await getStaffByUsername(s.username))) {
         const hash = await bcrypt.hash(s.password, 10);
         await createStaff(s.username, hash, s.displayName);
         created.push("staff user: " + s.username);
       }
     }
-    return Response.json({ ok: true, created });
+    const staffPasswords: Record<string, string> = {};
+    for (const s of NAMED_STAFF) staffPasswords[s.username] = s.password;
+    return Response.json({ ok: true, created, staffPasswords });
   } catch (e) {
     return Response.json({ error: "Setup failed" }, { status: 500 });
   }

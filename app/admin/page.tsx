@@ -6,6 +6,7 @@ import Image from "next/image";
 export default function AdminPage() {
   const [tables, setTables] = useState<{ id: string; number: number }[]>([]);
   const [setupDone, setSetupDone] = useState(false);
+  const [staffPasswords, setStaffPasswords] = useState<Record<string, string> | null>(null);
   const [baseUrl, setBaseUrl] = useState("");
 
   const [connectionError, setConnectionError] = useState("");
@@ -28,7 +29,11 @@ export default function AdminPage() {
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ staffUsername: "staff", staffPassword: "gamesync123" }),
             });
-            if (res.ok) setTables(await fetch("/api/tables").then((r) => r.json()));
+            if (res.ok) {
+              const data = await res.json();
+              setTables(await fetch("/api/tables").then((r) => r.json()));
+              if (data.staffPasswords) setStaffPasswords(data.staffPasswords);
+            }
           } catch {
             // ignore; user can click Run setup
           }
@@ -51,6 +56,7 @@ export default function AdminPage() {
       if (res.ok) {
         setSetupDone(true);
         setTables(await fetch("/api/tables").then((r) => r.json()));
+        if (data.staffPasswords) setStaffPasswords(data.staffPasswords);
       } else {
         alert(data.error || "Setup failed");
       }
@@ -69,7 +75,7 @@ export default function AdminPage() {
       <div className="flex-1 p-6">
         <div className="mx-auto max-w-2xl">
           <h1 className="text-[#1c1917] font-semibold text-lg mb-1">Setup & QR codes</h1>
-          <p className="text-[#57534e] text-sm mb-6">Create tables and print QR codes for each table.</p>
+          <p className="text-[#57534e] text-sm mb-6">One-time setup: create tables and staff. Print the QR codes and paste them at each table—those links are permanent and never change.</p>
 
           {connectionError && (
             <div className="mb-6 rounded-xl bg-red-50 border border-red-100 px-4 py-3 text-sm text-red-700">
@@ -80,7 +86,7 @@ export default function AdminPage() {
           {tables.length === 0 && !connectionError && (
             <div className="mb-6 rounded-2xl bg-white p-6 shadow-sm border border-[#e7e5e4]">
               <p className="text-[#1c1917] font-medium mb-2">No tables yet</p>
-              <p className="text-[#57534e] text-sm mb-4">Setup runs automatically when you open this page. If it didn’t, click below. Creates tables 1–8 and staff (admin / admin123, sanajay, arvind, chiti, ashok, bivish / gamesync123).</p>
+              <p className="text-[#57534e] text-sm mb-4">Click once to create tables 1–8 and staff accounts. After that, your QR codes are ready—paste them at tables and they work forever. (Runs automatically if the list is empty.)</p>
               <button
                 onClick={runSetup}
                 className="rounded-xl bg-[#c2410c] text-white font-medium py-2.5 px-4 hover:bg-[#9a3412] transition-colors"
@@ -89,8 +95,18 @@ export default function AdminPage() {
               </button>
               {setupDone && (
                 <p className="mt-3 text-sm text-green-700">
-                  Done. Logins: staff / gamesync123 · admin / admin123 · sanajay, arvind, chiti, ashok, bivish / gamesync123
+                  Done. Staff login: /staff/login · admin / admin123 · staff / gamesync123
                 </p>
+              )}
+              {staffPasswords && Object.keys(staffPasswords).length > 0 && (
+                <div className="mt-4 p-4 rounded-xl bg-amber-50 border border-amber-200">
+                  <p className="text-amber-800 font-medium text-sm mb-2">Named staff passwords (share securely with each person)</p>
+                  <ul className="text-sm text-amber-900 font-mono space-y-1">
+                    {Object.entries(staffPasswords).map(([user, pw]) => (
+                      <li key={user}><strong>{user}</strong>: {pw}</li>
+                    ))}
+                  </ul>
+                </div>
               )}
             </div>
           )}
@@ -121,8 +137,18 @@ export default function AdminPage() {
               </div>
               <div className="text-sm text-[#78716c] space-y-1">
                 <p>Staff login: <a href="/staff/login" className="text-[#c2410c] hover:underline">/staff/login</a></p>
-                <p>User IDs: <strong>sanajay</strong>, <strong>arvind</strong>, <strong>chiti</strong>, <strong>ashok</strong>, <strong>bivish</strong> (password: gamesync123)</p>
-                <p className="text-amber-700 mt-2">If you have to run setup again after refresh: the app is using temporary storage. Add <strong>Redis</strong> in Vercel (Storage → Upstash) and redeploy so data persists and you only setup once.</p>
+                <p>User IDs: <strong>sanajay</strong>, <strong>arvind</strong>, <strong>chiti</strong>, <strong>ashok</strong>, <strong>bivish</strong> (each has a unique password)</p>
+                {staffPasswords && Object.keys(staffPasswords).length > 0 && (
+                  <div className="mt-3 p-3 rounded-lg bg-amber-50 border border-amber-200">
+                    <p className="text-amber-800 font-medium text-xs mb-1">Named staff passwords (share securely)</p>
+                    <ul className="text-xs text-amber-900 font-mono space-y-0.5">
+                      {Object.entries(staffPasswords).map(([user, pw]) => (
+                        <li key={user}><strong>{user}</strong>: {pw}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                <p className="text-[#57534e] mt-2 text-xs">On the live site (Vercel): add <strong>Redis</strong> once (Storage → Upstash, then redeploy) so tables and staff are saved permanently. Your QR codes and links stay the same either way.</p>
               </div>
             </div>
           )}

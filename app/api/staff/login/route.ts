@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { getStaffByUsername, createSession, createStaff } from "@/lib/store";
+import { NAMED_STAFF } from "@/lib/staff-passwords";
 
 const STAFF_COOKIE = "gafesync_staff_token";
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 7; // 7 days
@@ -8,11 +9,7 @@ const COOKIE_MAX_AGE = 60 * 60 * 24 * 7; // 7 days
 const DEFAULT_USERS: { username: string; password: string; displayName: string }[] = [
   { username: "admin", password: "admin123", displayName: "Admin" },
   { username: "staff", password: "gamesync123", displayName: "Cafe Staff" },
-  { username: "sanajay", password: "gamesync123", displayName: "Sanajay" },
-  { username: "arvind", password: "gamesync123", displayName: "Arvind" },
-  { username: "chiti", password: "gamesync123", displayName: "Chiti" },
-  { username: "ashok", password: "gamesync123", displayName: "Ashok" },
-  { username: "bivish", password: "gamesync123", displayName: "Bivish" },
+  ...NAMED_STAFF.map((s) => ({ username: s.username, password: s.password, displayName: s.displayName })),
 ];
 
 export async function POST(request: NextRequest) {
