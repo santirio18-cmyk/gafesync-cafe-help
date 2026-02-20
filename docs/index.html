@@ -21,16 +21,20 @@
     }
     .header {
       background: #1a1a1a;
-      color: #fff;
       padding: 1.5rem 2rem;
       border-bottom: 4px solid #ea580c;
       margin: -2rem -2rem 2rem -2rem;
       width: 100%;
     }
-    h1 { font-size: 1.75rem; margin: 0; }
-    .tagline { color: rgba(255,255,255,0.8); font-size: 0.9rem; margin-top: 0.25rem; }
-    p { max-width: 420px; line-height: 1.6; color: #57534e; }
-    a {
+    .header img {
+      display: block;
+      height: 80px;
+      width: auto;
+      margin: 0 auto;
+    }
+    h2 { font-size: 1.25rem; margin: 0 0 1rem; color: #1c1917; }
+    p { max-width: 420px; line-height: 1.6; color: #57534e; margin: 0.5rem 0; }
+    .btn {
       display: inline-block;
       margin-top: 1rem;
       padding: 0.75rem 1.5rem;
@@ -40,18 +44,19 @@
       border-radius: 0.75rem;
       font-weight: 600;
     }
-    a:hover { background: #c2410c; }
-    .repo { margin-top: 2rem; font-size: 0.9rem; }
-    .repo a { background: transparent; color: #ea580c; padding: 0; }
+    .btn:hover { background: #c2410c; }
+    .note { margin-top: 1.5rem; font-size: 0.875rem; color: #78716c; }
+    .note a { color: #ea580c; }
+    .note code { background: #f5f5f4; padding: 0.2em 0.4em; border-radius: 4px; }
   </style>
 </head>
 <body>
   <div class="header">
-    <h1>GameSync Cafe</h1>
-    <p class="tagline">Gamers on-board · Table help for board game cafes</p>
+    <img src="logo.png" alt="GameSync — Gamers on-board" />
   </div>
-  <p>Table help &amp; staff notifications. Customers scan a QR at their table, tap &quot;Need Help&quot;, and staff get notified.</p>
-  <a href="https://github.com/santirio18-cmyk/gafesync-cafe-help">View project on GitHub</a>
-  <p class="repo">To run the app: clone the repo, then <code>npm install</code> and <code>npm run dev</code>. For a live public link with working &quot;Need Help&quot; and staff login, deploy to <a href="https://vercel.com">Vercel</a> (connect your GitHub repo).</p>
+  <h2>Table help for board game cafes</h2>
+  <p>Customers scan a QR at their table, tap &quot;Need Help&quot;, and staff get notified.</p>
+  <a class="btn" href="https://github.com/santirio18-cmyk/gafesync-cafe-help">View project on GitHub</a>
+  <p class="note">To run the app: clone the repo, then <code>npm install</code> and <code>npm run dev</code>. For a live link with working Need Help and staff login, deploy the repo to <a href="https://vercel.com">Vercel</a>.</p>
 </body>
 </html>
