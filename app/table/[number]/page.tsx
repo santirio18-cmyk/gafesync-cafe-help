@@ -30,7 +30,7 @@ export default function TableHelpPage() {
         });
         const data = await res.json();
         if (res.ok) {
-          setMessage("Help is on the way! A staff member will be with you shortly.");
+          setMessage("Help is on the way! A Game Guru will be with you shortly.");
           setStatus("success");
           return;
         }
@@ -43,7 +43,7 @@ export default function TableHelpPage() {
       }
     }
     setMessage(
-      "We've noted your table. A staff member will be with you shortly. If no one arrives in a couple of minutes, please wave or ask any staff—they're here to help."
+      "We've noted your table. A Game Guru will be with you shortly. If no one arrives in a couple of minutes, please wave or ask at the counter—we're here to help."
     );
     setStatus("success");
   };
@@ -81,7 +81,7 @@ export default function TableHelpPage() {
           </div>
 
           <p className="text-[#57534e] text-center text-sm mb-6 leading-relaxed">
-            Need something? Tap below and our staff will come to your table.
+            Need something? Tap below and a Game Guru will come to your table.
           </p>
 
           <button

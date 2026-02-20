@@ -18,14 +18,14 @@ export default function Home() {
       </header>
       <main className="flex-1 flex flex-col items-center justify-center px-5 py-12">
         <p className="text-[#57534e] text-center text-lg max-w-sm mb-10">
-          Table help for your board game cafe. Staff get notified when customers need assistance.
+          Table help for your board game cafe. Game Gurus get notified when customers need assistance.
         </p>
         <div className="w-full max-w-xs flex flex-col gap-3">
           <Link
-            href="/staff/login"
+            href="/game-guru/login"
             className="block w-full text-center rounded-xl bg-[#c2410c] text-white font-medium py-3.5 px-5 hover:bg-[#9a3412] transition-colors"
           >
-            Staff login
+            Game Guru login
           </Link>
           <Link
             href="/admin"

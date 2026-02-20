@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "GameSync",
-  description: "Table help & staff notifications for GameSync",
+  description: "Table help & Game Guru notifications for GameSync",
 };
 
 export default function RootLayout({

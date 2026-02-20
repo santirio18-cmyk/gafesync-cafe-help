@@ -95,7 +95,7 @@ export default function AdminPage() {
               </button>
               {setupDone && (
                 <p className="mt-3 text-sm text-green-700">
-                  Done. Staff login: /staff/login · admin / admin123 · staff / gamesync123
+                  Done. Game Guru login: /game-guru/login · admin / admin123 · staff / gamesync123
                 </p>
               )}
               {staffPasswords && Object.keys(staffPasswords).length > 0 && (
@@ -136,7 +136,7 @@ export default function AdminPage() {
                 ))}
               </div>
               <div className="text-sm text-[#78716c] space-y-1">
-                <p>Staff login: <a href="/staff/login" className="text-[#c2410c] hover:underline">/staff/login</a></p>
+                <p>Game Guru login: <a href="/game-guru/login" className="text-[#c2410c] hover:underline">/game-guru/login</a></p>
                 <p>User IDs: <strong>sanajay</strong>, <strong>arvind</strong>, <strong>chiti</strong>, <strong>ashok</strong>, <strong>bivish</strong> (each has a unique password)</p>
                 {staffPasswords && Object.keys(staffPasswords).length > 0 && (
                   <div className="mt-3 p-3 rounded-lg bg-amber-50 border border-amber-200">
