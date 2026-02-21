@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const username = body?.username?.trim();
-    const password = body?.password;
+    const password = typeof body?.password === "string" ? body.password.trim() : "";
     if (!username || !password) {
       return Response.json({ error: "Username and password required" }, { status: 400 });
     }

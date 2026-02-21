@@ -75,17 +75,7 @@ export default function GameGuruLoginPage() {
                 autoComplete="current-password"
               />
             </div>
-            {error && (
-              <div className="space-y-1.5">
-                <p className="text-sm text-red-600">{error}</p>
-                {error.includes("Invalid") && (
-                  <p className="text-xs text-[#78716c]">Admin: use the password from the project (lib/staff-passwords.ts). Game Gurus use the unique passwords from Admin (Tables & QR codes page).</p>
-                )}
-                {typeof window !== "undefined" && window.location.hostname.includes("vercel.app") && (
-                  <p className="text-xs text-[#78716c]">If you sign in but get sent back here, add Redis in Vercel (Storage) so your session persists.</p>
-                )}
-              </div>
-            )}
+            {error && <p className="text-sm text-red-600">{error}</p>}
             <button
               type="submit"
               disabled={loading}
