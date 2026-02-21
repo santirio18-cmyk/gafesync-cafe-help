@@ -72,8 +72,22 @@ async function load(): Promise<Store> {
       try {
         const { Redis } = await import("@upstash/redis");
         const redis = new Redis({ url: redisUrl, token: redisToken });
-        const raw = await redis.get<string>(KV_KEY);
-        if (raw) return { ...defaultStore, ...JSON.parse(raw) };
+        const raw = await redis.get<unknown>(KV_KEY);
+        if (raw != null) {
+          let parsed: Record<string, unknown>;
+          if (typeof raw === "string") {
+            try {
+              parsed = JSON.parse(raw) as Record<string, unknown>;
+            } catch {
+              return { ...defaultStore };
+            }
+          } else if (typeof raw === "object" && raw !== null) {
+            parsed = raw as Record<string, unknown>;
+          } else {
+            return { ...defaultStore };
+          }
+          return { ...defaultStore, ...parsed } as Store;
+        }
         return { ...defaultStore };
       } catch (e) {
         lastError = e instanceof Error ? e : new Error(String(e));
