@@ -125,7 +125,21 @@ export default function GameGuruDashboardPage() {
         if (r.ok) {
           const data = await r.json();
           setStaff(data);
-          setIsAdmin(data?.username === "admin");
+          const admin = data?.username === "admin";
+          setIsAdmin(admin);
+          // Refetch request data right after session is confirmed so first load shows data (cookie is already sent)
+          const [mineRes, allRes] = await Promise.all([
+            fetch("/api/help?mine=true"),
+            admin ? fetch("/api/help") : Promise.resolve(null),
+          ]);
+          if (mineRes.ok) {
+            const mineData = await mineRes.json();
+            setMyAccepted(Array.isArray(mineData) ? mineData : []);
+          }
+          if (admin && allRes?.ok) {
+            const allData = await allRes.json();
+            setAllRequests(Array.isArray(allData) ? allData : []);
+          }
         }
       })
       .catch(() => {
