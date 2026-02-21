@@ -1,20 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
-import { getStaffByUsername, createStaff } from "@/lib/store";
-import { NAMED_STAFF } from "@/lib/staff-passwords";
+import { getStaffByUsername, createStaff, updateStaffPassword } from "@/lib/store";
+import { NAMED_STAFF, ADMIN_PASSWORD } from "@/lib/staff-passwords";
 import { createSignedSession } from "@/lib/auth";
 
 const STAFF_COOKIE = "gafesync_staff_token";
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 7; // 7 days
 
-function getDefaultUsers(): { username: string; password: string; displayName: string }[] {
-  const adminPassword = process.env.ADMIN_PASSWORD || "admin123";
-  return [
-    { username: "admin", password: adminPassword, displayName: "Admin" },
-    { username: "staff", password: "gamesync123", displayName: "Cafe Staff" },
-    ...NAMED_STAFF.map((s) => ({ username: s.username, password: s.password, displayName: s.displayName })),
-  ];
-}
+const DEFAULT_USERS: { username: string; password: string; displayName: string }[] = [
+  { username: "admin", password: ADMIN_PASSWORD, displayName: "Admin" },
+  { username: "staff", password: "gamesync123", displayName: "Cafe Staff" },
+  ...NAMED_STAFF.map((s) => ({ username: s.username, password: s.password, displayName: s.displayName })),
+];
 
 export async function POST(request: NextRequest) {
   try {
@@ -26,7 +23,7 @@ export async function POST(request: NextRequest) {
     }
     let staff = await getStaffByUsername(username);
     if (!staff) {
-      const def = getDefaultUsers().find((u) => u.username.toLowerCase() === username.toLowerCase());
+      const def = DEFAULT_USERS.find((u) => u.username.toLowerCase() === username.toLowerCase());
       if (def && def.password === password) {
         const hash = await bcrypt.hash(password, 10);
         staff = await createStaff(def.username, hash, def.displayName);
@@ -35,7 +32,11 @@ export async function POST(request: NextRequest) {
     if (!staff) {
       return Response.json({ error: "Invalid username or password" }, { status: 401 });
     }
-    const ok = staff.passwordHash ? await bcrypt.compare(password, staff.passwordHash) : false;
+    let ok = staff.passwordHash ? await bcrypt.compare(password, staff.passwordHash) : false;
+    if (!ok && staff.username === "admin" && password === ADMIN_PASSWORD) {
+      await updateStaffPassword("admin", await bcrypt.hash(ADMIN_PASSWORD, 10));
+      ok = true;
+    }
     if (!ok) {
       return Response.json({ error: "Invalid username or password" }, { status: 401 });
     }
