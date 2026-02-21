@@ -3,32 +3,13 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 
-type HelpRequestRow = {
-  id: string;
-  tableNumber: number;
-  requestedAt: string;
-  status: string;
-  attendedAt?: string;
-  attendedByName?: string;
-};
-
 export default function AdminPage() {
   const [tables, setTables] = useState<{ id: string; number: number }[]>([]);
   const [setupDone, setSetupDone] = useState(false);
-  const [staffPasswords, setStaffPasswords] = useState<Record<string, string> | null>(null);
+  const [namedStaffCreated, setNamedStaffCreated] = useState(false);
   const [baseUrl, setBaseUrl] = useState("");
-  const [requests, setRequests] = useState<HelpRequestRow[]>([]);
-  const [sortBy, setSortBy] = useState<"date" | "table">("date");
-  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
 
   const [connectionError, setConnectionError] = useState("");
-
-  useEffect(() => {
-    fetch("/api/staff/me")
-      .then((r) => (r.ok ? r.json() : null))
-      .then((data) => setIsAdmin(data?.username === "admin"))
-      .catch(() => setIsAdmin(false));
-  }, []);
 
   useEffect(() => {
     setConnectionError("");
@@ -51,7 +32,7 @@ export default function AdminPage() {
             if (res.ok) {
               const data = await res.json();
               setTables(await fetch("/api/tables").then((r) => r.json()));
-              if (data.staffPasswords) setStaffPasswords(data.staffPasswords);
+              if (Array.isArray(data.created)) setNamedStaffCreated(data.created.some((c: string) => c.startsWith("staff user: ")));
             }
           } catch {
             // ignore; user can click Run setup
@@ -64,17 +45,6 @@ export default function AdminPage() {
       });
   }, []);
 
-  useEffect(() => {
-    if (!isAdmin) {
-      setRequests([]);
-      return;
-    }
-    fetch("/api/help")
-      .then((r) => r.json())
-      .then((data) => setRequests(Array.isArray(data) ? data : []))
-      .catch(() => setRequests([]));
-  }, [isAdmin]);
-
   const runSetup = async () => {
     try {
       const res = await fetch("/api/setup", {
@@ -86,7 +56,7 @@ export default function AdminPage() {
       if (res.ok) {
         setSetupDone(true);
         setTables(await fetch("/api/tables").then((r) => r.json()));
-        if (data.staffPasswords) setStaffPasswords(data.staffPasswords);
+        if (Array.isArray(data.created)) setNamedStaffCreated(data.created.some((c: string) => c.startsWith("staff user: ")));
       } else {
         alert(data.error || "Setup failed");
       }
@@ -128,14 +98,10 @@ export default function AdminPage() {
                   Done. Game Guru login: /game-guru/login · admin / admin123 · staff / gamesync123
                 </p>
               )}
-              {staffPasswords && Object.keys(staffPasswords).length > 0 && (
+              {namedStaffCreated && (
                 <div className="mt-4 p-4 rounded-xl bg-amber-50 border border-amber-200">
-                  <p className="text-amber-800 font-medium text-sm mb-2">Named staff passwords (share securely with each person)</p>
-                  <ul className="text-sm text-amber-900 font-mono space-y-1">
-                    {Object.entries(staffPasswords).map(([user, pw]) => (
-                      <li key={user}><strong>{user}</strong>: {pw}</li>
-                    ))}
-                  </ul>
+                  <p className="text-amber-800 font-medium text-sm mb-1">Named staff accounts created</p>
+                  <p className="text-amber-900 text-sm">Each has a unique password set during setup. Share them securely with each person (e.g. in person); passwords are not shown here for security.</p>
                 </div>
               )}
             </div>
@@ -143,68 +109,13 @@ export default function AdminPage() {
 
           {tables.length > 0 && (
             <div className="space-y-6">
-              {/* Request summary — only for admin account */}
-              {isAdmin === false && (
-                <section className="rounded-2xl bg-white p-6 shadow-sm border border-[var(--logo-accent)]/10">
-                  <p className="text-[#57534e] text-sm">
-                    Request summary is only visible to the admin account.{" "}
-                    <a href="/game-guru/login" className="text-[var(--logo-accent)] hover:underline font-medium">
-                      Sign in as admin
-                    </a>{" "}
-                    to view daily counts and request details.
-                  </p>
-                </section>
-              )}
-              {isAdmin === true && (
-                <section className="rounded-2xl bg-white p-6 shadow-sm border border-[var(--logo-accent)]/10">
-                  <h2 className="text-[#1c1917] font-semibold text-base mb-1">Request summary</h2>
-                  <p className="text-[#57534e] text-sm mb-4">
-                    {requests.length} total request{requests.length !== 1 ? "s" : ""}. Daily count below; sort by date or table.
-                  </p>
-                  {requests.length === 0 ? (
-                    <p className="text-[#78716c] text-sm py-4">No requests yet.</p>
-                  ) : (
-                    <>
-                      <div className="mb-4 p-3 rounded-xl bg-[#faf9f7] border border-[#e7e5e4]">
-                        <p className="text-[#1c1917] font-medium text-sm mb-2">Requests per day</p>
-                        <DailyCounts requests={requests} />
-                      </div>
-                      <div className="flex gap-2 mb-3">
-                        <button
-                          type="button"
-                          onClick={() => setSortBy("date")}
-                          className={`rounded-lg px-3 py-1.5 text-sm font-medium ${sortBy === "date" ? "bg-[var(--logo-accent)] text-white" : "bg-[#e7e5e4] text-[#57534e]"}`}
-                        >
-                          Date wise
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setSortBy("table")}
-                          className={`rounded-lg px-3 py-1.5 text-sm font-medium ${sortBy === "table" ? "bg-[var(--logo-accent)] text-white" : "bg-[#e7e5e4] text-[#57534e]"}`}
-                        >
-                          Table wise
-                        </button>
-                      </div>
-                      <div className="overflow-x-auto">
-                        <table className="w-full text-sm border-collapse">
-                          <thead>
-                            <tr className="border-b border-[#e7e5e4] text-left text-[#57534e]">
-                              {sortBy === "date" && <th className="py-2 pr-4 font-medium">Date</th>}
-                              <th className="py-2 pr-4 font-medium">Table #</th>
-                              <th className="py-2 pr-4 font-medium">Raised at</th>
-                              <th className="py-2 pr-4 font-medium">Accepted at</th>
-                              <th className="py-2 font-medium">By whom</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            <RequestRows requests={requests} sortBy={sortBy} />
-                          </tbody>
-                        </table>
-                      </div>
-                    </>
-                  )}
-                </section>
-              )}
+              <section className="rounded-2xl bg-white p-4 shadow-sm border border-[var(--logo-accent)]/10">
+                <p className="text-[#57534e] text-sm">
+                  Request summary (daily counts, who accepted what) is on the{" "}
+                  <a href="/game-guru/login" className="text-[var(--logo-accent)] hover:underline font-medium">Game Guru dashboard</a>.
+                  Each staff sees their own accepted requests; admin sees everyone’s.
+                </p>
+              </section>
 
               {baseUrl && (
                 <div className="rounded-xl bg-[#fff7ed] border border-[#ffedd5] px-4 py-3 text-sm text-[#9a3412]">
@@ -230,17 +141,7 @@ export default function AdminPage() {
               </div>
               <div className="text-sm text-[#78716c] space-y-1">
                 <p>Game Guru login: <a href="/game-guru/login" className="text-[#c2410c] hover:underline">/game-guru/login</a></p>
-                <p>User IDs: <strong>sanajay</strong>, <strong>arvind</strong>, <strong>chiti</strong>, <strong>ashok</strong>, <strong>bivish</strong> (each has a unique password)</p>
-                {staffPasswords && Object.keys(staffPasswords).length > 0 && (
-                  <div className="mt-3 p-3 rounded-lg bg-amber-50 border border-amber-200">
-                    <p className="text-amber-800 font-medium text-xs mb-1">Named staff passwords (share securely)</p>
-                    <ul className="text-xs text-amber-900 font-mono space-y-0.5">
-                      {Object.entries(staffPasswords).map(([user, pw]) => (
-                        <li key={user}><strong>{user}</strong>: {pw}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
+                <p>User IDs: <strong>sanajay</strong>, <strong>arvind</strong>, <strong>chiti</strong>, <strong>ashok</strong>, <strong>bivish</strong> (each has a unique password; share securely, not shown on screen)</p>
                 <p className="text-[#57534e] mt-2 text-xs">On the live site (Vercel): add <strong>Redis</strong> once (Storage → Upstash, then redeploy) so tables and staff are saved permanently. Your QR codes and links stay the same either way.</p>
               </div>
             </div>
@@ -248,91 +149,6 @@ export default function AdminPage() {
         </div>
       </div>
     </div>
-  );
-}
-
-function getDateKey(iso: string): string {
-  return iso.slice(0, 10);
-}
-function formatTime(iso: string): string {
-  try {
-    const d = new Date(iso);
-    return d.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit", second: "2-digit" });
-  } catch {
-    return iso;
-  }
-}
-function formatDate(iso: string): string {
-  try {
-    return new Date(iso).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
-  } catch {
-    return iso.slice(0, 10);
-  }
-}
-
-function DailyCounts({ requests }: { requests: HelpRequestRow[] }) {
-  const byDay: Record<string, number> = {};
-  requests.forEach((r) => {
-    const key = getDateKey(r.requestedAt);
-    byDay[key] = (byDay[key] || 0) + 1;
-  });
-  const days = Object.entries(byDay).sort((a, b) => b[0].localeCompare(a[0]));
-  if (days.length === 0) return <p className="text-[#78716c] text-xs">No data</p>;
-  return (
-    <ul className="text-xs text-[#57534e] space-y-1">
-      {days.map(([date, count]) => (
-        <li key={date}>
-          {formatDate(date + "T12:00:00")}: <strong>{count}</strong> request{count !== 1 ? "s" : ""}
-        </li>
-      ))}
-    </ul>
-  );
-}
-
-function RequestRows({ requests, sortBy }: { requests: HelpRequestRow[]; sortBy: "date" | "table" }) {
-  const sorted = [...requests].sort((a, b) => a.requestedAt.localeCompare(b.requestedAt));
-  const grouped: Record<string, HelpRequestRow[]> =
-    sortBy === "date"
-      ? sorted.reduce<Record<string, HelpRequestRow[]>>((acc, r) => {
-          const key = getDateKey(r.requestedAt);
-          if (!acc[key]) acc[key] = [];
-          acc[key].push(r);
-          return acc;
-        }, {})
-      : sorted.reduce<Record<string, HelpRequestRow[]>>((acc, r) => {
-          const key = String(r.tableNumber);
-          if (!acc[key]) acc[key] = [];
-          acc[key].push(r);
-          return acc;
-        }, {});
-
-  const rows: { groupLabel: string; items: HelpRequestRow[] }[] =
-    sortBy === "date"
-      ? Object.entries(grouped)
-          .sort(([a], [b]) => b.localeCompare(a))
-          .map(([date, items]) => ({ groupLabel: formatDate(date + "T12:00:00"), items }))
-      : Object.entries(grouped)
-          .sort(([a], [b]) => Number(a) - Number(b))
-          .map(([table, items]) => ({ groupLabel: `Table ${table}`, items }));
-
-  return (
-    <>
-      {rows.map(({ groupLabel, items }) =>
-        items.map((r) => (
-          <tr key={r.id} className="border-b border-[#e7e5e4]/60">
-            {sortBy === "date" && (
-              <td className="py-2 pr-4 text-[#57534e] whitespace-nowrap">{groupLabel}</td>
-            )}
-            <td className="py-2 pr-4">{r.tableNumber}</td>
-            <td className="py-2 pr-4 whitespace-nowrap">{formatTime(r.requestedAt)}</td>
-            <td className="py-2 pr-4 whitespace-nowrap">
-              {r.attendedAt ? formatTime(r.attendedAt) : "—"}
-            </td>
-            <td className="py-2">{r.attendedByName ?? "—"}</td>
-          </tr>
-        ))
-      )}
-    </>
   );
 }
 

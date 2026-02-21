@@ -39,9 +39,7 @@ export async function POST(request: NextRequest) {
         created.push("staff user: " + s.username);
       }
     }
-    const staffPasswords: Record<string, string> = {};
-    for (const s of NAMED_STAFF) staffPasswords[s.username] = s.password;
-    return Response.json({ ok: true, created, staffPasswords });
+    return Response.json({ ok: true, created });
   } catch (e) {
     return Response.json({ error: "Setup failed" }, { status: 500 });
   }

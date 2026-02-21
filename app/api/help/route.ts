@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { createHelpRequest, getHelpRequests, getStaffById } from "@/lib/store";
+import { createHelpRequest, getHelpRequests, getHelpRequestsAttendedBy, getStaffById } from "@/lib/store";
 import { getStaffIdFromRequest, getSessionFromRequest } from "@/lib/auth";
 
 export async function POST(request: NextRequest) {
@@ -29,17 +29,26 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   const onlyPending = request.nextUrl.searchParams.get("pending") === "true";
+  const mine = request.nextUrl.searchParams.get("mine") === "true";
+
+  if (mine) {
+    const staffId = await getStaffIdFromRequest();
+    if (!staffId) return Response.json({ error: "Unauthorized" }, { status: 401 });
+    const requests = await getHelpRequestsAttendedBy(staffId);
+    return Response.json(requests);
+  }
   if (onlyPending) {
     const staffId = await getStaffIdFromRequest();
     if (!staffId) return Response.json({ error: "Unauthorized" }, { status: 401 });
-  } else {
-    const session = await getSessionFromRequest();
-    const staffId = session?.staffId ?? (await getStaffIdFromRequest());
-    if (!staffId) return Response.json({ error: "Unauthorized" }, { status: 401 });
-    const staff = await getStaffById(staffId);
-    const username = session?.username ?? staff?.username;
-    if (username !== "admin") return Response.json({ error: "Admin only" }, { status: 403 });
+    const requests = await getHelpRequests(true);
+    return Response.json(requests);
   }
-  const requests = await getHelpRequests(onlyPending);
+  const session = await getSessionFromRequest();
+  const staffId = session?.staffId ?? (await getStaffIdFromRequest());
+  if (!staffId) return Response.json({ error: "Unauthorized" }, { status: 401 });
+  const staff = await getStaffById(staffId);
+  const username = session?.username ?? staff?.username;
+  if (username !== "admin") return Response.json({ error: "Admin only" }, { status: 403 });
+  const requests = await getHelpRequests(false);
   return Response.json(requests);
 }

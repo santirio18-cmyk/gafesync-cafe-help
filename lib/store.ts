@@ -152,6 +152,11 @@ export async function getHelpRequests(onlyPending = false): Promise<HelpRequest[
   return onlyPending ? reqs.filter((r) => r.status === "pending") : reqs;
 }
 
+export async function getHelpRequestsAttendedBy(staffId: string): Promise<HelpRequest[]> {
+  const reqs = (await load()).helpRequests;
+  return reqs.filter((r) => r.status === "attended" && r.attendedBy === staffId);
+}
+
 export async function attendHelpRequest(
   requestId: string,
   staffId: string,
