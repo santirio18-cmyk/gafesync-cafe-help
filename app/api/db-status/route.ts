@@ -22,7 +22,7 @@ export async function GET() {
       : hasRedisEnv && tables.length > 0
         ? "Database is working. Data is persisting in Redis."
         : hasRedisEnv
-          ? "Redis is configured. Run Setup from Admin to create tables and staff."
+          ? "Redis is configured. Tables and staff are stored here. Open Admin (Tables & QR codes) to create them if the list is empty."
           : "Using file or memory (fine for local dev).";
 
     return Response.json({

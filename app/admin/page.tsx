@@ -12,6 +12,8 @@ export default function AdminPage() {
 
   const [connectionError, setConnectionError] = useState("");
   const [dbPersistent, setDbPersistent] = useState<boolean | null>(null);
+  const [creating, setCreating] = useState(false);
+  const [createFailed, setCreateFailed] = useState(false);
 
   useEffect(() => {
     fetch("/api/db-status")
@@ -42,6 +44,7 @@ export default function AdminPage() {
 
   useEffect(() => {
     setConnectionError("");
+    setCreateFailed(false);
     fetch("/api/config")
       .then((r) => r.json())
       .then((data) => setBaseUrl(data.qrBaseUrl || window.location.origin))
@@ -52,6 +55,8 @@ export default function AdminPage() {
         const list = Array.isArray(data) ? data : [];
         setTables(list);
         if (list.length === 0) {
+          setCreating(true);
+          setCreateFailed(false);
           try {
             const res = await fetch("/api/setup", {
               method: "POST",
@@ -60,17 +65,23 @@ export default function AdminPage() {
             });
             if (res.ok) {
               const data = await res.json();
-              setTables(await fetch("/api/tables").then((r) => r.json()));
+              const next = await fetch("/api/tables").then((r) => r.json());
+              setTables(Array.isArray(next) ? next : []);
               if (Array.isArray(data.created)) setNamedStaffCreated(data.created.some((c: string) => c.startsWith("staff user: ")));
+            } else {
+              setCreateFailed(true);
             }
           } catch {
-            // ignore; user can click Run setup
+            setCreateFailed(true);
+          } finally {
+            setCreating(false);
           }
         }
       })
       .catch(() => {
         setTables([]);
         setConnectionError("Connection failed. Start the server with: npm run dev");
+        setCreating(false);
       });
   }, []);
 
@@ -130,7 +141,9 @@ export default function AdminPage() {
     URL.revokeObjectURL(url);
   };
 
-  const runSetup = async () => {
+  const createTablesAndStaff = async () => {
+    setCreating(true);
+    setCreateFailed(false);
     try {
       const res = await fetch("/api/setup", {
         method: "POST",
@@ -140,13 +153,17 @@ export default function AdminPage() {
       const data = await res.json();
       if (res.ok) {
         setSetupDone(true);
-        setTables(await fetch("/api/tables").then((r) => r.json()));
+        const next = await fetch("/api/tables").then((r) => r.json());
+        setTables(Array.isArray(next) ? next : []);
         if (Array.isArray(data.created)) setNamedStaffCreated(data.created.some((c: string) => c.startsWith("staff user: ")));
       } else {
-        alert(data.error || "Setup failed");
+        setCreateFailed(true);
+        alert(data.error || "Could not store tables and staff in the database.");
       }
     } catch {
-      setConnectionError("Connection failed. Start the server with: npm run dev");
+      setCreateFailed(true);
+    } finally {
+      setCreating(false);
     }
   };
 
@@ -159,13 +176,13 @@ export default function AdminPage() {
       </header>
       <div className="flex-1 p-6">
         <div className="mx-auto max-w-2xl">
-          <h1 className="text-[#1c1917] font-semibold text-lg mb-1">Setup & QR codes</h1>
-          <p className="text-[#57534e] text-sm mb-6">One-time setup: create tables and staff. Print the QR codes and paste them at each table—those links are permanent and never change.</p>
+          <h1 className="text-[#1c1917] font-semibold text-lg mb-1">Tables & QR codes</h1>
+          <p className="text-[#57534e] text-sm mb-6">Tables 1–10 and staff are stored in the database. QR codes are generated from that—print and paste at each table. Links are permanent.</p>
 
           {dbPersistent === false && (
             <div className="mb-6 rounded-xl border-2 border-red-500 bg-red-50 px-4 py-3 text-sm text-red-800">
               <p className="font-semibold">Database not configured — data will not be saved</p>
-              <p className="mt-1">In production, Redis is required. Add KV_REST_API_URL and KV_REST_API_TOKEN in Vercel Environment Variables (e.g. connect Upstash Redis), then redeploy. Setup and requests will not persist until then.</p>
+              <p className="mt-1">In production, Redis is required. Add KV_REST_API_URL and KV_REST_API_TOKEN in Vercel Environment Variables (e.g. connect Upstash Redis), then redeploy. Tables and requests will not be saved until then.</p>
             </div>
           )}
           {connectionError && (
@@ -176,14 +193,34 @@ export default function AdminPage() {
 
           {tables.length === 0 && !connectionError && (
             <div className="mb-6 rounded-2xl bg-white p-6 shadow-sm border border-[var(--logo-accent)]/10">
-              <p className="text-[#1c1917] font-medium mb-2">No tables yet</p>
-              <p className="text-[#57534e] text-sm mb-4">Click once to create tables 1–10 and staff accounts. After that, your QR codes are ready—paste them at tables and they work forever. (Runs automatically if the list is empty.)</p>
-              <button
-                onClick={runSetup}
-                className="rounded-xl bg-[var(--logo-accent)] text-white font-medium py-2.5 px-4 hover:bg-[var(--logo-accent-dim)] transition-colors"
-              >
-                Run setup
-              </button>
+              {creating ? (
+                <>
+                  <p className="text-[#1c1917] font-medium mb-2">Preparing…</p>
+                  <p className="text-[#57534e] text-sm">Storing tables 1–10 and staff in the database. QR codes will appear in a moment.</p>
+                </>
+              ) : createFailed ? (
+                <>
+                  <p className="text-[#1c1917] font-medium mb-2">Database not ready</p>
+                  <p className="text-[#57534e] text-sm mb-4">Tables and staff are stored in Redis. Add KV_REST_API_URL and KV_REST_API_TOKEN in Vercel (e.g. Upstash Redis), redeploy, then refresh or click Retry.</p>
+                  <button
+                    onClick={createTablesAndStaff}
+                    className="rounded-xl bg-[var(--logo-accent)] text-white font-medium py-2.5 px-4 hover:bg-[var(--logo-accent-dim)] transition-colors"
+                  >
+                    Retry
+                  </button>
+                </>
+              ) : (
+                <>
+                  <p className="text-[#1c1917] font-medium mb-2">Loading…</p>
+                  <p className="text-[#57534e] text-sm">Tables and staff are stored in the database. If nothing appears, click Retry.</p>
+                  <button
+                    onClick={createTablesAndStaff}
+                    className="mt-3 rounded-xl bg-[var(--logo-accent)] text-white font-medium py-2.5 px-4 hover:bg-[var(--logo-accent-dim)] transition-colors"
+                  >
+                    Retry
+                  </button>
+                </>
+              )}
               {setupDone && (
                 <p className="mt-3 text-sm text-green-700">
                   Done. Game Guru login: /game-guru/login · admin / admin123 · staff / gamesync123
@@ -191,8 +228,8 @@ export default function AdminPage() {
               )}
               {namedStaffCreated && (
                 <div className="mt-4 p-4 rounded-xl bg-amber-50 border border-amber-200">
-                  <p className="text-amber-800 font-medium text-sm mb-1">Named staff accounts created</p>
-                  <p className="text-amber-900 text-sm">Each has a unique password set during setup. Share them securely with each person (e.g. in person); passwords are not shown here for security.</p>
+                  <p className="text-amber-800 font-medium text-sm mb-1">Named staff accounts stored in database</p>
+                  <p className="text-amber-900 text-sm">Each has a unique password. Share them securely with each person (e.g. in person); passwords are not shown here for security.</p>
                 </div>
               )}
             </div>

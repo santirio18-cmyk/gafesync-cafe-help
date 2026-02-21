@@ -67,15 +67,21 @@ async function load(): Promise<Store> {
   const redisUrl = process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL;
   const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN;
   if (redisUrl && redisToken) {
-    try {
-      const { Redis } = await import("@upstash/redis");
-      const redis = new Redis({ url: redisUrl, token: redisToken });
-      const raw = await redis.get<string>(KV_KEY);
-      if (raw) return { ...defaultStore, ...JSON.parse(raw) };
-      return { ...defaultStore };
-    } catch {
-      if (isProduction()) return { ...defaultStore };
-      // fall through for local dev
+    let lastError: Error | null = null;
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        const { Redis } = await import("@upstash/redis");
+        const redis = new Redis({ url: redisUrl, token: redisToken });
+        const raw = await redis.get<string>(KV_KEY);
+        if (raw) return { ...defaultStore, ...JSON.parse(raw) };
+        return { ...defaultStore };
+      } catch (e) {
+        lastError = e instanceof Error ? e : new Error(String(e));
+        if (attempt === 0) await new Promise((r) => setTimeout(r, 400));
+      }
+    }
+    if (isProduction() && lastError) {
+      throw lastError;
     }
   }
   if (isProduction()) {

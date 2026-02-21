@@ -31,7 +31,7 @@ export default function Home() {
             href="/admin"
             className="block w-full text-center rounded-xl border-2 border-[#e7e5e4] bg-white text-[#1c1917] font-semibold py-3.5 px-5 hover:bg-[#fafaf9] hover:border-[#ea580c]/30 transition-colors"
           >
-            Admin — QR codes &amp; setup
+            Admin — Tables &amp; QR codes
           </Link>
         </div>
       </main>

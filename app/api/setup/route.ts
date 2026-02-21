@@ -50,6 +50,6 @@ export async function POST(request: NextRequest) {
       const message = e instanceof Error ? e.message : "Database not configured. In production, add Redis (Upstash) in Vercel and set KV_REST_API_URL and KV_REST_API_TOKEN. Then redeploy.";
       return Response.json({ error: message, code: "DATABASE_NOT_CONFIGURED" }, { status: 503 });
     }
-    return Response.json({ error: "Setup failed" }, { status: 500 });
+    return Response.json({ error: "Could not create tables and staff" }, { status: 500 });
   }
 }
