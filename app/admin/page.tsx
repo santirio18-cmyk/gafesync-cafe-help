@@ -8,8 +8,29 @@ export default function AdminPage() {
   const [setupDone, setSetupDone] = useState(false);
   const [namedStaffCreated, setNamedStaffCreated] = useState(false);
   const [baseUrl, setBaseUrl] = useState("");
+  const [qrDataUrls, setQrDataUrls] = useState<Record<number, string>>({});
 
   const [connectionError, setConnectionError] = useState("");
+
+  useEffect(() => {
+    if (!baseUrl || tables.length === 0) return;
+    let cancelled = false;
+    const load = async () => {
+      const QR = await import("qrcode").then((m) => m.default);
+      const next: Record<number, string> = {};
+      for (const t of tables) {
+        if (cancelled) return;
+        try {
+          next[t.number] = await QR.toDataURL(`${baseUrl}/table/${t.number}`, { width: 180, margin: 1 });
+        } catch {
+          // skip
+        }
+      }
+      if (!cancelled) setQrDataUrls(next);
+    };
+    load();
+    return () => { cancelled = true; };
+  }, [baseUrl, tables]);
 
   useEffect(() => {
     setConnectionError("");
@@ -44,6 +65,62 @@ export default function AdminPage() {
         setConnectionError("Connection failed. Start the server with: npm run dev");
       });
   }, []);
+
+  const getPrintSheetHtml = () => {
+    const tableNumbers = tables.map((t) => t.number).sort((a, b) => a - b);
+    if (tableNumbers.length === 0) return "";
+    const cards = tableNumbers
+      .map(
+        (n) =>
+          `<div class="card">
+            <p class="card-title">Table ${n}</p>
+            <img src="${qrDataUrls[n] || ""}" alt="Table ${n}" width="180" height="180" />
+            <p class="card-url">${baseUrl}/table/${n}</p>
+          </div>`
+      )
+      .join("");
+    return `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"><title>GameSync Cafe – QR codes for print</title>
+<style>
+  body { font-family: system-ui, sans-serif; padding: 16px; color: #1c1917; }
+  .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; max-width: 800px; margin: 0 auto; }
+  .card { border: 1px solid #e7e5e4; border-radius: 12px; padding: 16px; text-align: center; page-break-inside: avoid; }
+  .card-title { font-weight: 600; margin: 0 0 12px 0; font-size: 18px; }
+  .card img { display: block; margin: 0 auto 8px; }
+  .card-url { font-size: 11px; color: #78716c; word-break: break-all; margin: 0; }
+  @media print { body { padding: 0; } .card { box-shadow: none; } }
+</style>
+</head>
+<body>
+  <h1 style="text-align:center;margin-bottom:24px">GameSync Cafe – Table QR codes</h1>
+  <div class="grid">${cards}</div>
+  <p style="text-align:center;margin-top:24px;font-size:12px;color:#78716c">Print this page and cut out each QR code for your tables.</p>
+</body>
+</html>`;
+  };
+
+  const openPrintSheet = () => {
+    const html = getPrintSheetHtml();
+    if (!html) return;
+    const w = window.open("", "_blank");
+    if (w) {
+      w.document.write(html);
+      w.document.close();
+    }
+  };
+
+  const downloadPrintSheet = () => {
+    const html = getPrintSheetHtml();
+    if (!html) return;
+    const blob = new Blob([html], { type: "text/html;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "gamesync-cafe-qr-codes.html";
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
   const runSetup = async () => {
     try {
@@ -126,12 +203,31 @@ export default function AdminPage() {
                   )}
                 </div>
               )}
+              <div className="mb-4 flex flex-wrap gap-3 items-center">
+                <button
+                  type="button"
+                  onClick={openPrintSheet}
+                  disabled={tables.length === 0 || Object.keys(qrDataUrls).length < tables.length}
+                  className="rounded-xl bg-[var(--logo-accent)] text-white font-medium py-2.5 px-4 hover:bg-[var(--logo-accent-dim)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  Open print sheet
+                </button>
+                <button
+                  type="button"
+                  onClick={downloadPrintSheet}
+                  disabled={tables.length === 0 || Object.keys(qrDataUrls).length < tables.length}
+                  className="rounded-xl bg-white border-2 border-[var(--logo-accent)] text-[var(--logo-accent)] font-medium py-2.5 px-4 hover:bg-[#fff7ed] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  Download as file
+                </button>
+              </div>
+              <p className="text-[#57534e] text-sm mb-4">Use <strong>Open print sheet</strong> then Print (Ctrl+P / Cmd+P) or Save as PDF. Use <strong>Download as file</strong> to get an HTML file you can share (e.g. in chat)—open it in a browser to print.</p>
               <div className="grid gap-5 sm:grid-cols-2">
                 {tables.map((t) => (
                   <div key={t.id} className="rounded-2xl bg-white p-5 shadow-sm border border-[var(--logo-accent)]/10">
                     <p className="text-[#1c1917] font-medium text-center mb-3">Table {t.number}</p>
                     <div className="flex justify-center">
-                      <QRCode value={`${baseUrl}/table/${t.number}`} size={140} />
+                      <QRCode value={`${baseUrl}/table/${t.number}`} size={140} dataUrl={qrDataUrls[t.number]} />
                     </div>
                     <p className="mt-3 break-all text-center text-xs text-[#78716c]">
                       {baseUrl}/table/{t.number}
@@ -152,13 +248,15 @@ export default function AdminPage() {
   );
 }
 
-function QRCode({ value, size }: { value: string; size: number }) {
-  const [dataUrl, setDataUrl] = useState<string | null>(null);
+function QRCode({ value, size, dataUrl: dataUrlProp }: { value: string; size: number; dataUrl?: string }) {
+  const [localUrl, setLocalUrl] = useState<string | null>(null);
   useEffect(() => {
+    if (dataUrlProp) return;
     import("qrcode").then((QR) => {
-      QR.toDataURL(value, { width: size, margin: 1 }).then(setDataUrl);
+      QR.toDataURL(value, { width: size, margin: 1 }).then(setLocalUrl);
     });
-  }, [value, size]);
+  }, [value, size, dataUrlProp]);
+  const dataUrl = dataUrlProp || localUrl;
   if (!dataUrl) return <div className="h-[140px] w-[140px] animate-pulse rounded-lg bg-[#e7e5e4]" />;
   return (
     // eslint-disable-next-line @next/next/no-img-element
