@@ -129,8 +129,8 @@ export default function GameGuruDashboardPage() {
           setIsAdmin(admin);
           // Refetch request data right after session is confirmed so first load shows data (cookie is already sent)
           const [mineRes, allRes] = await Promise.all([
-            fetch("/api/help?mine=true"),
-            admin ? fetch("/api/help") : Promise.resolve(null),
+            fetch("/api/help?mine=true", { credentials: "include" }),
+            admin ? fetch("/api/help", { credentials: "include" }) : Promise.resolve(null),
           ]);
           if (mineRes.ok) {
             const mineData = await mineRes.json();
@@ -165,10 +165,15 @@ export default function GameGuruDashboardPage() {
       setAllRequests([]);
       return;
     }
-    fetch("/api/help")
-      .then((r) => (r.ok ? r.json() : []))
-      .then((data) => setAllRequests(Array.isArray(data) ? data : []))
-      .catch(() => setAllRequests([]));
+    fetch("/api/help", { credentials: "include" })
+      .then(async (r) => {
+        if (r.ok) {
+          const data = await r.json();
+          setAllRequests(Array.isArray(data) ? data : []);
+        }
+        // Don't overwrite with [] on 403/failure so refetched data from login callback stays
+      })
+      .catch(() => {});
   }, [isAdmin]);
 
   useEffect(() => {
