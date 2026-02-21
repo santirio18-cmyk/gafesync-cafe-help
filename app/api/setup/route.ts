@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import bcrypt from "bcryptjs";
-import { createStaff, getTables, addTable, getStaffByUsername, isDatabaseUnavailableError } from "@/lib/store";
+import { createStaff, getTables, addTable, getStaffByUsername, updateStaffPassword, isDatabaseUnavailableError } from "@/lib/store";
 import { NAMED_STAFF } from "@/lib/staff-passwords";
 
 // One-time setup: create default staff and tables if empty.
@@ -32,10 +32,16 @@ export async function POST(request: NextRequest) {
       await createStaff(defaultUsername, hash, "Cafe Staff");
       created.push("staff user: " + defaultUsername);
     }
-    if (!(await getStaffByUsername("admin"))) {
-      const adminHash = await bcrypt.hash("admin123", 10);
+    const adminPassword = process.env.ADMIN_PASSWORD || "admin123";
+    const existingAdmin = await getStaffByUsername("admin");
+    if (!existingAdmin) {
+      const adminHash = await bcrypt.hash(adminPassword, 10);
       await createStaff("admin", adminHash, "Admin");
       created.push("staff user: admin");
+    } else if (process.env.ADMIN_PASSWORD) {
+      const adminHash = await bcrypt.hash(adminPassword, 10);
+      await updateStaffPassword("admin", adminHash);
+      created.push("admin password updated from ADMIN_PASSWORD");
     }
     for (const s of NAMED_STAFF) {
       if (!(await getStaffByUsername(s.username))) {

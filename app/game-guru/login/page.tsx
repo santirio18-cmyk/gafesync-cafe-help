@@ -79,7 +79,7 @@ export default function GameGuruLoginPage() {
               <div className="space-y-1.5">
                 <p className="text-sm text-red-600">{error}</p>
                 {error.includes("Invalid") && (
-                  <p className="text-xs text-[#78716c]">Try admin / admin123. Game Gurus use the unique passwords from Admin (Tables & QR codes page).</p>
+                  <p className="text-xs text-[#78716c]">Admin: use the password you set (ADMIN_PASSWORD in Vercel) or the default. Game Gurus use the unique passwords from Admin (Tables & QR codes page).</p>
                 )}
                 {typeof window !== "undefined" && window.location.hostname.includes("vercel.app") && (
                   <p className="text-xs text-[#78716c]">If you sign in but get sent back here, add Redis in Vercel (Storage) so your session persists.</p>

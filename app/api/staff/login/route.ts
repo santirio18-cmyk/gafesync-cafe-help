@@ -7,11 +7,14 @@ import { createSignedSession } from "@/lib/auth";
 const STAFF_COOKIE = "gafesync_staff_token";
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 7; // 7 days
 
-const DEFAULT_USERS: { username: string; password: string; displayName: string }[] = [
-  { username: "admin", password: "admin123", displayName: "Admin" },
-  { username: "staff", password: "gamesync123", displayName: "Cafe Staff" },
-  ...NAMED_STAFF.map((s) => ({ username: s.username, password: s.password, displayName: s.displayName })),
-];
+function getDefaultUsers(): { username: string; password: string; displayName: string }[] {
+  const adminPassword = process.env.ADMIN_PASSWORD || "admin123";
+  return [
+    { username: "admin", password: adminPassword, displayName: "Admin" },
+    { username: "staff", password: "gamesync123", displayName: "Cafe Staff" },
+    ...NAMED_STAFF.map((s) => ({ username: s.username, password: s.password, displayName: s.displayName })),
+  ];
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -23,7 +26,7 @@ export async function POST(request: NextRequest) {
     }
     let staff = await getStaffByUsername(username);
     if (!staff) {
-      const def = DEFAULT_USERS.find((u) => u.username.toLowerCase() === username.toLowerCase());
+      const def = getDefaultUsers().find((u) => u.username.toLowerCase() === username.toLowerCase());
       if (def && def.password === password) {
         const hash = await bcrypt.hash(password, 10);
         staff = await createStaff(def.username, hash, def.displayName);

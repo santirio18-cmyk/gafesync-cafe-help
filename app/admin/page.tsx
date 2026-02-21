@@ -238,10 +238,14 @@ export default function AdminPage() {
           {tables.length > 0 && (
             <div className="space-y-6">
               <section className="rounded-2xl bg-white p-4 shadow-sm border border-[var(--logo-accent)]/10">
-                <p className="text-[#57534e] text-sm">
+                <p className="text-[#57534e] text-sm mb-2">
                   Request summary (daily counts, who accepted what) is on the{" "}
                   <a href="/game-guru/login" className="text-[var(--logo-accent)] hover:underline font-medium">Game Guru dashboard</a>.
                   Each staff sees their own accepted requests; admin sees everyone’s.
+                </p>
+                <p className="text-[#57534e] text-sm">
+                  <strong>Admin password:</strong> Set <code className="bg-[#f5f5f4] px-1 rounded">ADMIN_PASSWORD</code> in Vercel Environment Variables to a strong password, redeploy, then click{" "}
+                  <button type="button" onClick={createTablesAndStaff} className="text-[var(--logo-accent)] hover:underline font-medium">Apply admin password</button> to update the admin account.
                 </p>
               </section>
 

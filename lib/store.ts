@@ -253,6 +253,15 @@ export async function createStaff(
   return staff;
 }
 
+export async function updateStaffPassword(username: string, passwordHash: string): Promise<boolean> {
+  const store = await load();
+  const staff = store.staff.find((s) => s.username.toLowerCase() === username.toLowerCase());
+  if (!staff) return false;
+  staff.passwordHash = passwordHash;
+  await save(store);
+  return true;
+}
+
 // Sessions (active staff)
 const HEARTBEAT_MAX_AGE_MS = 5 * 60 * 1000; // 5 min
 
