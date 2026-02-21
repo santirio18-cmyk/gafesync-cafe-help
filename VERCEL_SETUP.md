@@ -1,6 +1,6 @@
 # Set up database (Redis) on Vercel
 
-The app uses **Upstash Redis** so tables, staff, help requests, and setup data persist across deployments and instances.
+**Redis is required in production.** Without it, help requests and performance data are **not saved** (serverless memory is not shared across requests). The app will show a clear warning and return 503 on create/attend until Redis is configured.
 
 ## 1. Create the database
 
@@ -33,10 +33,10 @@ The app reads both naming conventions, so either is fine.
 1. Open **https://gafesync-cafe-help.vercel.app/admin** (or your live URL).
 2. Click **Run setup** (or let auto-setup run if the list is empty).
 
-Tables 1–8 and all staff accounts (admin, staff, and the 5 Game Gurus) will be stored in Redis. After that, data persists and you don’t need to run setup again.
+Tables 1–10 and all staff accounts (admin, staff, and the 5 Game Gurus) will be stored in Redis. After that, data persists and you don’t need to run setup again.
 
 ---
 
 **Optional:** In **Settings → Environment Variables** you can add **SESSION_SECRET** (a long random string) to sign login cookies more securely in production.
 
-**Local development:** No Redis needed. The app uses `data/store.json` when Redis env vars are not set.
+**Local development:** No Redis needed. The app uses `data/store.json` (or in-memory) when Redis env vars are not set. In production (Vercel), only Redis is used for persistence.

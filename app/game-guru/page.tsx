@@ -70,9 +70,17 @@ export default function GameGuruDashboardPage() {
   const [summarySortBy, setSummarySortBy] = useState<"date" | "table">("date");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [dbPersistent, setDbPersistent] = useState<boolean | null>(null);
   const [notificationPermission, setNotificationPermission] = useState<NotificationPermission | null>(null);
   const previousIdsRef = useRef<Set<string>>(new Set());
   const hasFetchedOnce = useRef(false);
+
+  useEffect(() => {
+    fetch("/api/db-status")
+      .then((r) => r.json())
+      .then((data) => setDbPersistent(data.persistent !== false))
+      .catch(() => setDbPersistent(null));
+  }, []);
 
   useEffect(() => {
     if (typeof window !== "undefined" && "Notification" in window) {
@@ -197,6 +205,11 @@ export default function GameGuruDashboardPage() {
         router.push("/game-guru/login");
         return;
       }
+      if (res.status === 503) {
+        const data = await res.json().catch(() => ({}));
+        setError(data?.error || "Database not configured. Add Redis in Vercel so requests are saved.");
+        return;
+      }
       if (res.ok) {
         await fetchRequests();
         await fetchMyAccepted();
@@ -248,6 +261,12 @@ export default function GameGuruDashboardPage() {
       </header>
       <div className="flex-1 p-5">
         <div className="mx-auto max-w-xl">
+          {dbPersistent === false && (
+            <div className="mb-4 rounded-xl border-2 border-red-500 bg-red-50 px-4 py-3 text-sm text-red-800">
+              <p className="font-semibold">Data is not being saved</p>
+              <p className="mt-1">Redis is required in production. Add KV_REST_API_URL and KV_REST_API_TOKEN in Vercel (e.g. via Upstash), then redeploy. Until then, help requests and performance data will be lost.</p>
+            </div>
+          )}
           {error && (
             <div className="mb-4 rounded-xl bg-red-50 border border-red-100 px-4 py-3 text-sm text-red-700">
               {error}

@@ -5,6 +5,29 @@ const DATA_DIR = join(process.cwd(), "data");
 const DATA_FILE = join(DATA_DIR, "store.json");
 const KV_KEY = "gafesync:store";
 
+/** True when running on Vercel or in production mode. */
+function isProduction(): boolean {
+  return process.env.VERCEL === "1" || process.env.NODE_ENV === "production";
+}
+
+function isRedisConfigured(): boolean {
+  const url = process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL;
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN;
+  return !!(url && token);
+}
+
+/** In production we must use Redis; otherwise data is lost (serverless memory is not shared). */
+export function isStorePersistent(): boolean {
+  if (!isProduction()) return true; // local dev: file or memory is ok
+  return isRedisConfigured();
+}
+
+/** Use in API routes to return 503 when production has no Redis or save failed. */
+export function isDatabaseUnavailableError(e: unknown): boolean {
+  const msg = e instanceof Error ? e.message : String(e);
+  return msg.startsWith("DATABASE_NOT_CONFIGURED") || msg.includes("Redis is configured but save failed");
+}
+
 export type Table = { id: string; number: number };
 export type HelpRequest = {
   id: string;
@@ -49,9 +72,14 @@ async function load(): Promise<Store> {
       const redis = new Redis({ url: redisUrl, token: redisToken });
       const raw = await redis.get<string>(KV_KEY);
       if (raw) return { ...defaultStore, ...JSON.parse(raw) };
+      return { ...defaultStore };
     } catch {
-      // fall through
+      if (isProduction()) return { ...defaultStore };
+      // fall through for local dev
     }
+  }
+  if (isProduction()) {
+    return { ...defaultStore };
   }
   try {
     if (typeof existsSync !== "undefined") {
@@ -62,7 +90,7 @@ async function load(): Promise<Store> {
       }
     }
   } catch {
-    // file not available (e.g. Vercel serverless)
+    // file not available
   }
   if (!memoryStore) memoryStore = { ...defaultStore };
   return memoryStore;
@@ -82,6 +110,14 @@ async function save(store: Store): Promise<void> {
         if (attempt === 0) await new Promise((r) => setTimeout(r, 400));
       }
     }
+    if (isProduction()) {
+      throw new Error("Redis is configured but save failed. Data was not persisted.");
+    }
+  }
+  if (isProduction()) {
+    throw new Error(
+      "DATABASE_NOT_CONFIGURED: In production, Redis is required. Add KV_REST_API_URL and KV_REST_API_TOKEN in Vercel Environment Variables (e.g. via Upstash). Without Redis, data is lost and requests will not be saved."
+    );
   }
   try {
     if (typeof existsSync !== "undefined") {
@@ -90,7 +126,7 @@ async function save(store: Store): Promise<void> {
       return;
     }
   } catch {
-    // file not writable (e.g. Vercel)
+    // file not writable
   }
   memoryStore = store;
 }

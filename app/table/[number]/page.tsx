@@ -34,6 +34,11 @@ export default function TableHelpPage() {
           setStatus("success");
           return;
         }
+        if (res.status === 503 && data?.code === "DATABASE_NOT_CONFIGURED") {
+          setMessage("The cafe is configuring the system. Please ask a staff member for help in the meantime.");
+          setStatus("success");
+          return;
+        }
         lastError = data?.error || "Something went wrong.";
       } catch {
         lastError = "Connection failed.";

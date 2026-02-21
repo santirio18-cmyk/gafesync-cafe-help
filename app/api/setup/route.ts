@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import bcrypt from "bcryptjs";
-import { createStaff, getTables, addTable, getStaffByUsername } from "@/lib/store";
+import { createStaff, getTables, addTable, getStaffByUsername, isDatabaseUnavailableError } from "@/lib/store";
 import { NAMED_STAFF } from "@/lib/staff-passwords";
 
 // One-time setup: create default staff and tables if empty.
@@ -46,6 +46,10 @@ export async function POST(request: NextRequest) {
     }
     return Response.json({ ok: true, created });
   } catch (e) {
+    if (isDatabaseUnavailableError(e)) {
+      const message = e instanceof Error ? e.message : "Database not configured. In production, add Redis (Upstash) in Vercel and set KV_REST_API_URL and KV_REST_API_TOKEN. Then redeploy.";
+      return Response.json({ error: message, code: "DATABASE_NOT_CONFIGURED" }, { status: 503 });
+    }
     return Response.json({ error: "Setup failed" }, { status: 500 });
   }
 }

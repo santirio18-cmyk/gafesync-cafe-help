@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { createHelpRequest, getHelpRequests, getHelpRequestsAttendedBy, getStaffById } from "@/lib/store";
+import { createHelpRequest, getHelpRequests, getHelpRequestsAttendedBy, getStaffById, isDatabaseUnavailableError } from "@/lib/store";
 import { getStaffIdFromRequest, getSessionFromRequest } from "@/lib/auth";
 
 export async function POST(request: NextRequest) {
@@ -16,12 +16,23 @@ export async function POST(request: NextRequest) {
         return Response.json(req);
       } catch (e) {
         lastError = e instanceof Error ? e : new Error(String(e));
+        if (isDatabaseUnavailableError(e)) break;
         if (attempt === 0) await new Promise((r) => setTimeout(r, 500));
       }
+    }
+    if (lastError && isDatabaseUnavailableError(lastError)) {
+      return Response.json(
+        { error: lastError.message, code: "DATABASE_NOT_CONFIGURED" },
+        { status: 503 }
+      );
     }
     const message = lastError?.message ?? "Failed to create help request";
     return Response.json({ error: message }, { status: 400 });
   } catch (e) {
+    if (isDatabaseUnavailableError(e)) {
+      const message = e instanceof Error ? e.message : "Database not configured. Add Redis in Vercel (KV_REST_API_URL, KV_REST_API_TOKEN).";
+      return Response.json({ error: message, code: "DATABASE_NOT_CONFIGURED" }, { status: 503 });
+    }
     const message = e instanceof Error ? e.message : "Failed to create help request";
     return Response.json({ error: message }, { status: 400 });
   }

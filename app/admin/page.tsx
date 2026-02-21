@@ -11,6 +11,14 @@ export default function AdminPage() {
   const [qrDataUrls, setQrDataUrls] = useState<Record<number, string>>({});
 
   const [connectionError, setConnectionError] = useState("");
+  const [dbPersistent, setDbPersistent] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    fetch("/api/db-status")
+      .then((r) => r.json())
+      .then((data) => setDbPersistent(data.persistent !== false))
+      .catch(() => setDbPersistent(null));
+  }, []);
 
   useEffect(() => {
     if (!baseUrl || tables.length === 0) return;
@@ -154,6 +162,12 @@ export default function AdminPage() {
           <h1 className="text-[#1c1917] font-semibold text-lg mb-1">Setup & QR codes</h1>
           <p className="text-[#57534e] text-sm mb-6">One-time setup: create tables and staff. Print the QR codes and paste them at each table—those links are permanent and never change.</p>
 
+          {dbPersistent === false && (
+            <div className="mb-6 rounded-xl border-2 border-red-500 bg-red-50 px-4 py-3 text-sm text-red-800">
+              <p className="font-semibold">Database not configured — data will not be saved</p>
+              <p className="mt-1">In production, Redis is required. Add KV_REST_API_URL and KV_REST_API_TOKEN in Vercel Environment Variables (e.g. connect Upstash Redis), then redeploy. Setup and requests will not persist until then.</p>
+            </div>
+          )}
           {connectionError && (
             <div className="mb-6 rounded-xl bg-red-50 border border-red-100 px-4 py-3 text-sm text-red-700">
               {connectionError}
