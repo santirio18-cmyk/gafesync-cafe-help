@@ -13,7 +13,7 @@ Each table has a number and a QR code. When a customer scans the QR code, they s
 
 2. **First-time setup**
    - Go to **Admin** ([/admin](http://localhost:3000/admin)).
-   - Click **Run setup** to create tables 1–8 and a default staff account.
+   - Click **Run setup** to create tables 1–10 and a default staff account.
    - Default staff login: **staff** / **gamesync123**.
 
 3. **Print QR codes**

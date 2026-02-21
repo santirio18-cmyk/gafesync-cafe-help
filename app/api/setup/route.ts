@@ -15,11 +15,16 @@ export async function POST(request: NextRequest) {
     }
     const created: string[] = [];
     const tables = await getTables();
-    if (tables.length === 0) {
-      const tableNumbers = [1, 2, 3, 4, 5, 6, 7, 8];
-      for (const n of tableNumbers) await addTable(n);
-      created.push("tables: " + tableNumbers.join(", "));
+    const existingNumbers = new Set(tables.map((t) => t.number));
+    const tableNumbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+    const added: number[] = [];
+    for (const n of tableNumbers) {
+      if (!existingNumbers.has(n)) {
+        await addTable(n);
+        added.push(n);
+      }
     }
+    if (added.length > 0) created.push("tables: " + added.join(", "));
     const defaultUsername = body?.staffUsername || "staff";
     const defaultPassword = body?.staffPassword || "gamesync123";
     if (!(await getStaffByUsername(defaultUsername))) {
